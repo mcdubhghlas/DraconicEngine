@@ -5,5 +5,6 @@ bits/
 cmake-build-*/
 bin/
 build/
+graph/
 
 CMakeUserPresets.json

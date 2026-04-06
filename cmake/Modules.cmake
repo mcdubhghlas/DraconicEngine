@@ -7,6 +7,10 @@ set(NATIVE_THIRD_PARTY_DIR "${NATIVE_SOURCE_DIR}/thirdparty")
 if (BUILD_TESTING)
     message(STATUS "Bootstrapping unit tests module boost.ut")
     add_library(boost_ut_main "${NATIVE_THIRD_PARTY_DIR}/boost/ut_main.cpp")
+    set_target_properties(boost_ut_main PROPERTIES 
+        CXX_SCAN_FOR_MODULES ON
+        CXX_EXTENSIONS OFF
+    )
     target_sources(boost_ut_main
         PUBLIC
         FILE_SET CXX_MODULES
@@ -52,6 +56,12 @@ function(add_modules_library)
         message(STATUS "Adding static modules library ${LIB_TARGET}")
         add_library(${LIB_TARGET} STATIC)
     endif()
+
+    set_target_properties(${LIB_TARGET} PROPERTIES 
+        CXX_SCAN_FOR_MODULES ON
+        CXX_EXTENSIONS OFF
+    )
+
     target_compile_features(${LIB_TARGET} PUBLIC cxx_std_23)
     target_include_directories(${LIB_TARGET} PUBLIC ${NATIVE_SOURCE_DIR})
 
@@ -73,6 +83,7 @@ function(add_modules_library)
                 string(PREPEND UNIT_TEST_TARGET "${LIB_TARGET}_")
             endif()
             add_executable(${UNIT_TEST_TARGET} ${UNIT_TEST_FILE})
+            set_target_properties(${UNIT_TEST_TARGET} PROPERTIES CXX_SCAN_FOR_MODULES ON)
             target_compile_features(${UNIT_TEST_TARGET} PUBLIC cxx_std_23)
             target_link_libraries(${UNIT_TEST_TARGET} PRIVATE boost_ut_main ${LIB_TARGET})
             message(STATUS "Unit test ${UNIT_TEST_TARGET}")
@@ -80,6 +91,13 @@ function(add_modules_library)
         endforeach()
     endif()
 
+endfunction()
+
+function(enable_modules target)
+    set_target_properties(
+        ${target} PROPERTIES
+        CXX_SCAN_FOR_MODULES ON
+    )
 endfunction()
 
 function(target_link_modules)

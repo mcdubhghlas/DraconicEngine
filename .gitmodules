@@ -1,0 +1,9 @@
+[submodule "engine/native/thirdparty/bx"]
+	path = engine/native/thirdparty/bx
+	url = https://github.com/bkaradzic/bx
+[submodule "engine/native/thirdparty/bimg"]
+	path = engine/native/thirdparty/bimg
+	url = https://github.com/bkaradzic/bimg
+[submodule "engine/native/thirdparty/bgfx"]
+	path = engine/native/thirdparty/bgfx
+	url = https://github.com/bkaradzic/bgfx

@@ -8,7 +8,27 @@ elseif (CMAKE_VERSION VERSION_GREATER_EQUAL "4.0.0")
     set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "a9e1cf81-9932-4810-974b-6eccaf14e457")
 endif()
 
+find_package(Git QUIET)
+
+if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    message(STATUS "Updating submodules...")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT
+    )
+    
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "Failed to update submodules. Please run manually.")
+    endif()
+endif()
+
 project(DraconicEngine LANGUAGES C CXX)
+
+# Only have safe global rules here
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_MODULE_STD ON)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
