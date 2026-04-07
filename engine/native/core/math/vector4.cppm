@@ -147,4 +147,28 @@ export namespace draco::math {
             return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
         #endif
     }
+
+    // Returns squared magnitude.
+    [[nodiscard]] FORCEINLINE float length_sq(const Vector4& v) noexcept {
+        return dot(v, v);
+    }
+
+    // Returns magnitude
+    [[nodiscard]] FORCEINLINE float length(const Vector4& v) noexcept {
+        return std::sqrt(length_sq(v));
+    }
+
+    // Safe normalize, checks length.
+    [[nodiscard]] FORCEINLINE Vector4 normalize(const Vector4& v) noexcept {
+        const float len = length(v);
+
+        return (len > 0.0f) ? v / len : Vector4{0,0,0,0};
+    }
+
+    // Faster normalize, it presupposes vector has non-zero length.
+    [[nodiscard]] FORCEINLINE Vector4 normalize_fast(const Vector4& v) noexcept {
+        return v / length(v);
+    }
+
+
 } // namespace draco::math
