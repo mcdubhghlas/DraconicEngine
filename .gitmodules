@@ -7,3 +7,6 @@
 [submodule "engine/native/thirdparty/bgfx"]
 	path = engine/native/thirdparty/bgfx
 	url = https://github.com/bkaradzic/bgfx
+[submodule "engine/native/thirdparty/sdl"]
+	path = engine/native/thirdparty/sdl
+	url = https://github.com/libsdl-org/SDL

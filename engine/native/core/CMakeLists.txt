@@ -1,3 +1,5 @@
 add_modules_library(definitions)
 add_modules_library(math)
+add_modules_library(filesystem)
 target_link_libraries(math PUBLIC definitions)
+target_link_libraries(filesystem PUBLIC definitions)
