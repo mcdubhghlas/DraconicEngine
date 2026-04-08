@@ -170,5 +170,54 @@ export namespace draco::math {
         return v / length(v);
     }
 
+    // Returns distance between two vectors.
+    [[nodiscard]] FORCEINLINE float distance(const Vector4& a, const Vector4& b) noexcept {
+        return length(b - a);
+    }
+
+    // Return squared distance between two vectors.
+    [[nodiscard]] FORCEINLINE float distance_sq(const Vector4& a, const Vector4& b) noexcept {
+        return length_sq(a - b);
+    }
+
+    // Linear interpolation, t is weight.
+    [[nodiscard]] FORCEINLINE Vector4 lerp(const Vector4& a, const Vector4& b, float t) noexcept {
+        return a + (b - a) * t;
+    }
+
+    // Returns smallest vector between a and b.
+    [[nodiscard]] constexpr Vector4 min(const Vector4& a, const Vector4& b) noexcept {
+        return {
+            std::min(a.x, b.x),
+            std::min(a.y, b.y),
+            std::min(a.z, b.z),
+            std::min(a.w, b.w)
+        };
+    }
+
+    // Returns largest vector between a and b.
+    [[nodiscard]] constexpr Vector4 max(const Vector4& a, const Vector4& b) noexcept {
+        return {
+            std::max(a.x, b.x),
+            std::max(a.y, b.y),
+            std::max(a.z, b.z),
+            std::max(a.w, b.w)
+        }
+    }
+
+    // Clamps each component of x to the range [x_min, x_max]. Presupposes x_min <= x_max.
+    [[nodiscard]] constexpr Vector4 clamp(const Vector4& x, const Vector4& x_min, const Vector4& x_max) noexcept {
+        return max(x_min, min(x, x_max));
+    }
+
+    // Returns absolute value of each component of v.
+    [[nodiscard]] constexpr Vector4 abs(const Vector4& v) noexcept {
+        return {
+            std::abs(v.x),
+            std::abs(v.y),
+            std::abs(v.z),
+            std::abs(v.w)
+        };
+    }
 
 } // namespace draco::math
