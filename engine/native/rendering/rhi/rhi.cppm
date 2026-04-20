@@ -13,6 +13,7 @@ export namespace draco::rhi
     using ShaderHandle   = uint16_t;
     using UniformHandle  = uint16_t;
     using TextureHandle  = uint16_t;
+    using FramebufferHandle = uint16_t;
     using ViewID         = uint16_t;
 
     inline constexpr BufferHandle InvalidBuffer = 0xFFFF;
@@ -20,6 +21,7 @@ export namespace draco::rhi
     inline constexpr ShaderHandle InvalidShader = 0xFFFF;
     inline constexpr UniformHandle InvalidUniform = 0xFFFF;
     inline constexpr TextureHandle InvalidTexture = 0xFFFF;
+    inline constexpr FramebufferHandle InvalidFramebuffer = 0xFFFF;
     inline constexpr ViewID InvalidView = 0xFFFF;
 
     enum class PipelineState : uint64_t {
@@ -36,6 +38,19 @@ export namespace draco::rhi
         Vec4, // For colors or simple data
         Mat3, // For normal matrices
         Mat4, // For transform matrices
+    };
+
+    enum class TextureFormat {
+        RGBA8,
+        D16,
+        D24,
+        D32
+    };
+
+    struct TransientBuffer {
+        const void* data;
+        uint32_t size;
+        uint16_t stride;
     };
 
     struct RenderPacket
@@ -90,6 +105,17 @@ export namespace draco::rhi
     TextureHandle create_texture(const void* data, uint16_t width, uint16_t height, uint32_t flags = 0);
     void destroy_texture(TextureHandle handle);
 
+    FramebufferHandle create_framebuffer(uint16_t width, uint16_t height, TextureFormat format);
+    void destroy_framebuffer(FramebufferHandle handle);
+    TextureHandle get_framebuffer_texture(FramebufferHandle handle);
+
+    // Dynamic Buffer functions (For data that changes often)
+    BufferHandle create_dynamic_vertex_buffer(uint32_t size, uint16_t stride);
+    void update_dynamic_vertex_buffer(BufferHandle handle, uint32_t start_vertex, const void* data, uint32_t size);
+
+    // Set the render target for a specific view
+    void set_view_framebuffer(ViewID view, FramebufferHandle handle);
+    
     // Helper function to set a 4x4 matrix to the identity matrix
     void identity_matrix(float* _mtx);
 

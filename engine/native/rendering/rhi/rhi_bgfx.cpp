@@ -29,6 +29,9 @@ namespace draco::rhi
     static std::vector<Pipeline> g_pipelines;
     static std::vector<bgfx::UniformHandle> g_uniforms;
     static std::vector<bgfx::TextureHandle> g_textures;
+    static std::vector<bgfx::FrameBufferHandle> g_framebuffers;
+    static std::vector<bgfx::DynamicVertexBufferHandle> g_dynamic_vbs;
+    static std::map<FramebufferHandle, TextureHandle> g_fb_to_tex;
 
     static uint16_t g_width = 0;
     static uint16_t g_height = 0;
@@ -244,6 +247,14 @@ namespace draco::rhi
         }
     }
 
+    bgfx::TextureFormat::Enum map_format(TextureFormat format) {
+        switch(format) {
+            case TextureFormat::RGBA8: return bgfx::TextureFormat::RGBA8;
+            case TextureFormat::D24:   return bgfx::TextureFormat::D24;
+            default:                   return bgfx::TextureFormat::RGBA8;
+        }
+    }
+
     TextureHandle create_texture(const void* data, uint16_t width, uint16_t height, uint32_t flags)
     {
         if (!data || width == 0 || height == 0) {
@@ -265,54 +276,128 @@ namespace draco::rhi
         return static_cast<TextureHandle>(g_textures.size() - 1);
     }
 
+    FramebufferHandle create_framebuffer(uint16_t width, uint16_t height, TextureFormat format) {
+        // Create the texture that will be the color attachment
+        // We use BGFX_TEXTURE_RT to tell bgfx this is a Render Target
+        bgfx::TextureHandle th = bgfx::createTexture2D(
+            width, height, false, 1, bgfx::TextureFormat::RGBA8, 
+            BGFX_TEXTURE_RT | BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP
+        );
+
+        // Create the framebuffer using that texture
+        bgfx::FrameBufferHandle fbh = bgfx::createFrameBuffer(1, &th, true);
+        draco::rhi::g_framebuffers.push_back(fbh);
+    
+        draco::rhi::FramebufferHandle handle = static_cast<draco::rhi::FramebufferHandle>(draco::rhi::g_framebuffers.size() - 1);
+    
+        // Register the texture
+        draco::rhi::g_textures.push_back(th);
+        draco::rhi::TextureHandle tex_handle = static_cast<draco::rhi::TextureHandle>(draco::rhi::g_textures.size() - 1);
+    
+        draco::rhi::g_fb_to_tex[handle] = tex_handle;
+    
+        return handle;
+    }
+
+    TextureHandle get_framebuffer_texture(FramebufferHandle handle) {
+        if (draco::rhi::g_fb_to_tex.contains(handle)) {
+            return draco::rhi::g_fb_to_tex[handle];
+        }
+        return draco::rhi::InvalidTexture;
+    }
+
+    void set_view_framebuffer(ViewID view, FramebufferHandle handle) {
+        if (handle == draco::rhi::InvalidFramebuffer) {
+            bgfx::setViewFrameBuffer(view, { bgfx::kInvalidHandle });
+        } else {
+            bgfx::setViewFrameBuffer(view, draco::rhi::g_framebuffers[handle]);
+        }
+    }
+    
+    BufferHandle create_dynamic_vertex_buffer(uint32_t size) {
+        bgfx::VertexLayout layout;
+        layout.begin()
+            .add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
+            .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+
+        bgfx::DynamicVertexBufferHandle dvb = bgfx::createDynamicVertexBuffer(size / 24, layout);
+        // For now, let's just push it to a new specialized vector
+        g_dynamic_vbs.push_back(dvb);
+        return static_cast<BufferHandle>(g_dynamic_vbs.size() - 1);
+    }
+
+    void submit_transient(const RenderPacket& p, ViewID view, const void* data, uint32_t size) {
+        bgfx::TransientVertexBuffer tvb;
+        bgfx::VertexLayout layout;
+        layout.begin()
+            .add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
+            .add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
+            .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+        .end();
+
+        // Allocate from the transient pool for this frame
+        bgfx::allocTransientVertexBuffer(&tvb, size / 24, layout);
+    
+        if (tvb.data != nullptr) { // Check if the pointer is valid
+            std::memcpy(tvb.data, data, size);
+        }
+        bgfx::setVertexBuffer(0, &tvb);
+        
+        // Apply uniforms, state, etc.
+        bgfx::setState(g_pipelines[p.pipeline].state);
+        bgfx::submit(view, g_pipelines[p.pipeline].program);
+    }
+
     void identity_matrix(float* _mtx)
     {
         bx::mtxIdentity(_mtx);
     }
 
-    void submit(const RenderPacket& p, ViewID view)
+    void submit(const draco::rhi::RenderPacket& p, ViewID view)
     {
         // Check for null/invalid handles
-        if (p.pipeline == InvalidPipeline || p.vertex_buffer == InvalidBuffer) {
+        if (p.pipeline == draco::rhi::InvalidPipeline || p.vertex_buffer == draco::rhi::InvalidBuffer) {
             std::println("Error: Attempted to submit RenderPacket with unitialized handles.");
             return;
         }
 
         // Check for out of bounds handles
-        if (p.pipeline >= g_pipelines.size() || p.vertex_buffer >= g_buffers.size()) {
+        if (p.pipeline >= draco::rhi::g_pipelines.size() || p.vertex_buffer >= draco::rhi::g_buffers.size()) {
             std::println("Error: Handle out of bounds! The resource may have been destroyed already or it was never created. Pipeline Handle: {}, Vertex Buffer Handle: {}", p.pipeline, p.vertex_buffer);
             return;
         }
 
-        Pipeline& pipeline = g_pipelines[p.pipeline];
-        Buffer& vb = g_buffers[p.vertex_buffer];
+        draco::rhi::Pipeline& pipeline = draco::rhi::g_pipelines[p.pipeline];
+        draco::rhi::Buffer& vb = draco::rhi::g_buffers[p.vertex_buffer];
 
         bgfx::setTransform(p.model);
-        bgfx::setVertexBuffer(0, g_buffers[p.vertex_buffer].vbh);
+        bgfx::setVertexBuffer(0, draco::rhi::g_buffers[p.vertex_buffer].vbh);
 
-        if (p.index_buffer != InvalidBuffer)
+        if (p.index_buffer != draco::rhi::InvalidBuffer)
         {
-            if (p.index_buffer >= g_buffers.size()) {
+            if (p.index_buffer >= draco::rhi::g_buffers.size()) {
                 std::println("Error: Invalid index buffer handle in RenderPacket");
                 return;
             }
-            Buffer& ib = g_buffers[p.index_buffer];
+            draco::rhi::Buffer& ib = draco::rhi::g_buffers[p.index_buffer];
             if (ib.is_index)
                 bgfx::setIndexBuffer(ib.ibh);
         }
 
-        if (p.uniform_handle != InvalidUniform && p.uniform_data != nullptr)
+        if (p.uniform_handle != draco::rhi::InvalidUniform && p.uniform_data != nullptr)
         {
-            bgfx::setUniform(g_uniforms[p.uniform_handle], p.uniform_data, 1);
+            bgfx::setUniform(draco::rhi::g_uniforms[p.uniform_handle], p.uniform_data, 1);
         }
 
         // Bind Texture if valid
-        if (p.texture_handle != InvalidTexture && p.texture_handle < g_textures.size())
+        if (p.texture_handle != draco::rhi::InvalidTexture && p.texture_handle < draco::rhi::g_textures.size())
         {
             // TODO: Use a dedicated sampler handle later 
             // For now, we'll assume the uniform_handle passed is the sampler.
-            if (p.uniform_handle != InvalidUniform) {
-                bgfx::setTexture(p.texture_unit, g_uniforms[p.uniform_handle], g_textures[p.texture_handle]);
+            if (p.uniform_handle != draco::rhi::InvalidUniform) {
+                bgfx::setTexture(p.texture_unit, draco::rhi::g_uniforms[p.uniform_handle], draco::rhi::g_textures[p.texture_handle]);
             }
         }
 
@@ -322,23 +407,26 @@ namespace draco::rhi
 
     void begin_frame()
     {
+        // Initialize View 0 (Offscreen)
         bgfx::setViewRect(0, 0, 0, g_width, g_height);
+        bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
 
+        // Initialize View 1 (Backbuffer/Screen)
+        bgfx::setViewRect(1, 0, 0, g_width, g_height);
+        bgfx::setViewClear(1, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000ff, 1.0f, 0);
+
+        // Set transforms for both views
         float view[16];
         bx::mtxIdentity(view);
-
         float proj[16];
-        bx::mtxOrtho(
-            proj,
-            -1.0f, 1.0f,
-            -1.0f, 1.0f,
-            0.0f, 100.0f,
-            0.0f,
-            false
-        );
+        bx::mtxOrtho(proj, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
         bgfx::setViewTransform(0, view, proj);
+        bgfx::setViewTransform(1, view, proj);
+
+        // Touch both views so they definitely render
         bgfx::touch(0);
+        bgfx::touch(1);
     }
 
     void end_frame()

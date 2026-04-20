@@ -136,6 +136,8 @@ int main(int argc, char* argv[])
     // Create a uniform for an offset
     auto u_offset = draco::rhi::create_uniform("u_offset", draco::rhi::UniformType::Vec4);
 
+    auto offscreen_fb = draco::rhi::create_framebuffer(1280, 720, draco::rhi::TextureFormat::RGBA8);
+
     bool running = true;
 
     float time = 0.0f;
@@ -156,13 +158,16 @@ int main(int argc, char* argv[])
 
         time += 0.01f;
 
+        // Start the frame 
+        // This initializes View 0 and View 1
         draco::rhi::begin_frame();
 
-        // Prepare uniform data (Must be float arrays for Vec4)
-        float tint[4] = { 1.0f, 0.5f, 0.2f, 1.0f }; // Warm orange
-        float offset[4] = { std::sin(time), std::cos(time), 0.0f, 0.0f }; // Circular motion
+        // In pass 1, we render the Quad to the Framebuffer (View 0)
+        draco::rhi::set_view_framebuffer(0, offscreen_fb);
 
-        // Upload to the RHI (This prepares the state for the next submit)
+        float tint[4] = { 1.0f, 0.5f, 0.2f, 1.0f }; 
+        float offset[4] = { std::sin(time), std::cos(time), 0.0f, 0.0f };
+
         draco::rhi::set_uniform(u_tint, tint);
         draco::rhi::set_uniform(u_offset, offset);
 
@@ -170,15 +175,33 @@ int main(int argc, char* argv[])
         packet.vertex_buffer = vbh;
         packet.index_buffer  = ibh;
         packet.pipeline = pipeline;
-
         packet.texture_handle = tex;
         packet.uniform_handle = s_texColor; 
-        packet.texture_unit = 0; // Standard slot 0
+        packet.texture_unit = 0;
         
         draco::rhi::identity_matrix(packet.model);
 
-        // Submit uses the currently bound uniforms
+        // Submit to the offscreen view
         draco::rhi::submit(packet, 0);
+
+        // In pass 2, we render the Framebuffer result to the Screen (View 1)
+        // Setting to InvalidFramebuffer tells bgfx to target the backbuffer (the window)
+        draco::rhi::set_view_framebuffer(1, draco::rhi::InvalidFramebuffer);
+
+        draco::rhi::RenderPacket display_packet{};
+        display_packet.vertex_buffer = vbh; // Use the same quad vertices
+        display_packet.index_buffer  = ibh;
+        display_packet.pipeline      = pipeline;
+        
+        // Use the texture created by the framebuffer
+        display_packet.texture_handle = draco::rhi::get_framebuffer_texture(offscreen_fb);
+        display_packet.uniform_handle = s_texColor;
+        display_packet.texture_unit   = 0;
+
+        draco::rhi::identity_matrix(display_packet.model);
+
+        // Submit to the display view
+        draco::rhi::submit(display_packet, 1);
 
         draco::rhi::end_frame();
     }
