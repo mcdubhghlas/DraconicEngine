@@ -25,55 +25,57 @@ endif()
 
 project(DraconicEngine LANGUAGES C CXX)
 
-# Ensure that everyone is on the same page hardware wise or else we get errors
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-mavx2 -mfma)
-endif()
-
-# Only have safe global rules here
+# Global Rules
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_MODULE_STD ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON) # bgfx & deps give error if this isn't set, this is a temp workaround
-# Force all to use Clang or else a mismatch occurs
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+# Force Clang/libc++ to avoid ABI mismatch
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-mavx2 -mfma -stdlib=libc++)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+endif()
 
-include(CTest)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
+# Subdirectories for engine libs
 add_subdirectory(engine/native)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(X11_LIBS REQUIRED IMPORTED_TARGET x11 xext xcursor xrandr xrender xi xfixes)
-
+# Main Executable
 add_executable(draconic engine/native/main/main.cpp)
+
 enable_modules(draconic)
+
+set_target_properties(draconic PROPERTIES CXX_SCAN_FOR_MODULES ON)
+
 target_link_libraries(draconic
     PRIVATE
-    rhi
     core
     io
+    memory
     image_loader
+    platform
+    rhi
+    renderer
+    rendergraph
     bgfx
     bx
     bimg
     -Wl,--whole-archive SDL3::SDL3-static -Wl,--no-whole-archive
     c++ 
     c++abi
-    PkgConfig::X11_LIBS
     dl 
     pthread 
     m
 )
 
-# Shader copying
+# Asset sync
 set(ENGINE_SHADER_DIR "${CMAKE_SOURCE_DIR}/engine/native/rendering/shaders")
 add_custom_command(
     TARGET draconic POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${ENGINE_SHADER_DIR}"
         "$<TARGET_FILE_DIR:draconic>"
-    COMMENT "Copying shaders to build directory..."
+    COMMENT "Syncing shaders to build directory..."
 )

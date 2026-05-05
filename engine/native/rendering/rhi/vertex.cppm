@@ -6,7 +6,7 @@ export module rendering.rhi.vertex;
 
 import std;
 
-export namespace draco::rhi {
+export namespace draco::rendering::rhi {
     enum class Attrib { 
         Position, 
         Color0, 
@@ -22,7 +22,7 @@ export namespace draco::rhi {
 
     struct VertexElement {
         Attrib attrib;
-        uint8_t num;
+        uint16_t count;
         AttribType type;
         bool normalized = false;
     };
