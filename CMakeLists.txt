@@ -69,169 +69,192 @@ else()
 endif()
 
 set(SHADER_DIR "${CMAKE_SOURCE_DIR}/engine/native/rendering/shaders")
-
 set(BGFX_INCLUDE "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/src")
 
 if(WIN32)
-    find_program(SHADERC NAMES shadercRelease.exe shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build" PATH_SUFFIXES win64_vs2022/bin win64_vs2019/bin win64_mingw-gcc/bin NO_DEFAULT_PATH)
+
+    find_program(SHADERC NAMES shadercRelease.exe shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build"
+        PATH_SUFFIXES
+            win64_vs2022/bin
+            win64_vs2019/bin
+            win64_mingw-gcc/bin
+        NO_DEFAULT_PATH
+    )
 
     set(SHADER_PLATFORM windows)
     set(SHADER_PROFILE spirv)
 
 elseif(APPLE)
-    find_program(SHADERC NAMES shadercRelease shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build" PATH_SUFFIXES osx-arm64_clang/bin osx-x64_clang/bin NO_DEFAULT_PATH)
+
+    find_program(SHADERC NAMES shadercRelease shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build"
+        PATH_SUFFIXES
+            osx-arm64_clang/bin
+            osx-x64_clang/bin
+        NO_DEFAULT_PATH
+    )
 
     set(SHADER_PLATFORM osx)
     set(SHADER_PROFILE metal)
 
 elseif(UNIX)
-    find_program(SHADERC NAMES shadercRelease shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build" PATH_SUFFIXES linux64_gcc/bin linux64_clang/bin NO_DEFAULT_PATH)
+
+    find_program(SHADERC NAMES shadercRelease shaderc PATHS "${CMAKE_SOURCE_DIR}/engine/native/thirdparty/bgfx/.build"
+        PATH_SUFFIXES
+            linux64_gcc/bin
+            linux64_clang/bin
+        NO_DEFAULT_PATH
+    )
 
     set(SHADER_PLATFORM linux)
     set(SHADER_PROFILE spirv)
 
 endif()
 
-if(NOT SHADERC)
-    message(FATAL_ERROR
-        "shaderc not found under bgfx/.build"
-        "Build bgfx tools first (make shaderc in the bgfx directory)"
-        "or set -DSHADERC=/path/to/shadercRelease when configuring"
+if(SHADERC)
+
+    message(STATUS "shaderc found: ${SHADERC}")
+
+    set(VERTEX_SHADER        "${SHADER_DIR}/vs.sc")
+    set(FRAGMENT_SHADER      "${SHADER_DIR}/fs.sc")
+    set(VARYING_DEF          "${SHADER_DIR}/varying.def.sc")
+
+    set(QUAD_VERTEX_SHADER   "${SHADER_DIR}/vs_quad.sc")
+    set(QUAD_FRAGMENT_SHADER "${SHADER_DIR}/fs_quad.sc")
+    set(QUAD_VARYING_DEF     "${SHADER_DIR}/varying_quad.def.sc")
+
+    set(VERTEX_OUTPUT        "${CMAKE_BINARY_DIR}/vs.bin")
+    set(FRAGMENT_OUTPUT      "${CMAKE_BINARY_DIR}/fs.bin")
+
+    set(QUAD_VERTEX_OUTPUT   "${CMAKE_BINARY_DIR}/vs_quad.bin")
+    set(QUAD_FRAGMENT_OUTPUT "${CMAKE_BINARY_DIR}/fs_quad.bin")
+
+    add_custom_command(
+        OUTPUT ${VERTEX_OUTPUT}
+
+        COMMAND ${SHADERC}
+            -f ${VERTEX_SHADER}
+            -o ${VERTEX_OUTPUT}
+            --type vertex
+            --platform ${SHADER_PLATFORM}
+            -p ${SHADER_PROFILE}
+            --varyingdef ${VARYING_DEF}
+            -i ${BGFX_INCLUDE}
+
+        DEPENDS
+            ${VERTEX_SHADER}
+            ${VARYING_DEF}
+
+        COMMENT "Compiling vertex shader..."
     )
+
+    add_custom_command(
+        OUTPUT ${FRAGMENT_OUTPUT}
+
+        COMMAND ${SHADERC}
+            -f ${FRAGMENT_SHADER}
+            -o ${FRAGMENT_OUTPUT}
+            --type fragment
+            --platform ${SHADER_PLATFORM}
+            -p ${SHADER_PROFILE}
+            --varyingdef ${VARYING_DEF}
+            -i ${BGFX_INCLUDE}
+
+        DEPENDS
+            ${FRAGMENT_SHADER}
+            ${VARYING_DEF}
+
+        COMMENT "Compiling fragment shader..."
+    )
+
+    add_custom_command(
+        OUTPUT ${QUAD_VERTEX_OUTPUT}
+
+        COMMAND ${SHADERC}
+            -f ${QUAD_VERTEX_SHADER}
+            -o ${QUAD_VERTEX_OUTPUT}
+            --type vertex
+            --platform ${SHADER_PLATFORM}
+            -p ${SHADER_PROFILE}
+            --varyingdef ${QUAD_VARYING_DEF}
+            -i ${BGFX_INCLUDE}
+
+        DEPENDS
+            ${QUAD_VERTEX_SHADER}
+            ${QUAD_VARYING_DEF}
+
+        COMMENT "Compiling quad vertex shader..."
+    )
+
+    add_custom_command(
+        OUTPUT ${QUAD_FRAGMENT_OUTPUT}
+
+        COMMAND ${SHADERC}
+            -f ${QUAD_FRAGMENT_SHADER}
+            -o ${QUAD_FRAGMENT_OUTPUT}
+            --type fragment
+            --platform ${SHADER_PLATFORM}
+            -p ${SHADER_PROFILE}
+            --varyingdef ${QUAD_VARYING_DEF}
+            -i ${BGFX_INCLUDE}
+
+        DEPENDS
+            ${QUAD_FRAGMENT_SHADER}
+            ${QUAD_VARYING_DEF}
+
+        COMMENT "Compiling quad fragment shader..."
+    )
+
+    add_custom_target(shaders ALL
+        DEPENDS
+            ${VERTEX_OUTPUT}
+            ${FRAGMENT_OUTPUT}
+            ${QUAD_VERTEX_OUTPUT}
+            ${QUAD_FRAGMENT_OUTPUT}
+    )
+
+    add_dependencies(draconic shaders)
+
+    add_custom_command(
+        TARGET draconic POST_BUILD
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${VERTEX_OUTPUT}
+            $<TARGET_FILE_DIR:draconic>
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${FRAGMENT_OUTPUT}
+            $<TARGET_FILE_DIR:draconic>
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${QUAD_VERTEX_OUTPUT}
+            $<TARGET_FILE_DIR:draconic>
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${QUAD_FRAGMENT_OUTPUT}
+            $<TARGET_FILE_DIR:draconic>
+
+        COMMENT "Copying compiled shaders..."
+    )
+
+else()
+
+    message(WARNING
+        "shaderc not found. "
+        "Shaders will not be compiled automatically."
+    )
+
 endif()
 
-# Shader source files
-set(VERTEX_SHADER "${SHADER_DIR}/vs.sc")
-set(FRAGMENT_SHADER "${SHADER_DIR}/fs.sc")
-set(VARYING_DEF   "${SHADER_DIR}/varying.def.sc")
-set(QUAD_VERTEX_SHADER   "${SHADER_DIR}/vs_quad.sc")
-set(QUAD_FRAGMENT_SHADER "${SHADER_DIR}/fs_quad.sc")
-set(QUAD_VARYING_DEF     "${SHADER_DIR}/varying_quad.def.sc")
-
-# Output binaries
-set(VERTEX_OUTPUT "${CMAKE_BINARY_DIR}/vs.bin")
-set(FRAGMENT_OUTPUT "${CMAKE_BINARY_DIR}/fs.bin")
-set(QUAD_VERTEX_OUTPUT   "${CMAKE_BINARY_DIR}/vs_quad.bin")
-set(QUAD_FRAGMENT_OUTPUT "${CMAKE_BINARY_DIR}/fs_quad.bin")
-
-# Compile vertex shader
-add_custom_command(
-    OUTPUT ${VERTEX_OUTPUT}
-
-    COMMAND ${SHADERC}
-        -f ${VERTEX_SHADER}
-        -o ${VERTEX_OUTPUT}
-        --type vertex
-        --platform ${SHADER_PLATFORM}
-        -p ${SHADER_PROFILE}
-        --varyingdef ${VARYING_DEF}
-        -i ${BGFX_INCLUDE}
-
-    DEPENDS
-        ${VERTEX_SHADER}
-        ${VARYING_DEF}
-
-    COMMENT "Compiling vertex shader..."
+set(TEST_IMAGE
+    "${CMAKE_SOURCE_DIR}/assets/draconic_logo_no_text.png"
 )
 
-# Compile fragment shader
-add_custom_command(
-    OUTPUT ${FRAGMENT_OUTPUT}
-
-    COMMAND ${SHADERC}
-        -f ${FRAGMENT_SHADER}
-        -o ${FRAGMENT_OUTPUT}
-        --type fragment
-        --platform ${SHADER_PLATFORM}
-        -p ${SHADER_PROFILE}
-        --varyingdef ${VARYING_DEF}
-        -i ${BGFX_INCLUDE}
-
-    DEPENDS
-        ${FRAGMENT_SHADER}
-        ${VARYING_DEF}
-
-    COMMENT "Compiling fragment shader..."
-)
-
-add_custom_command(
-    OUTPUT ${QUAD_VERTEX_OUTPUT}
-
-    COMMAND ${SHADERC}
-        -f ${QUAD_VERTEX_SHADER}
-        -o ${QUAD_VERTEX_OUTPUT}
-        --type vertex
-        --platform ${SHADER_PLATFORM}
-        -p ${SHADER_PROFILE}
-        --varyingdef ${QUAD_VARYING_DEF}
-        -i ${BGFX_INCLUDE}
-
-    DEPENDS
-        ${QUAD_VERTEX_SHADER}
-        ${QUAD_VARYING_DEF}
-
-    COMMENT "Compiling quad vertex shader..."
-)
-
-add_custom_command(
-    OUTPUT ${QUAD_FRAGMENT_OUTPUT}
-
-    COMMAND ${SHADERC}
-        -f ${QUAD_FRAGMENT_SHADER}
-        -o ${QUAD_FRAGMENT_OUTPUT}
-        --type fragment
-        --platform ${SHADER_PLATFORM}
-        -p ${SHADER_PROFILE}
-        --varyingdef ${QUAD_VARYING_DEF}
-        -i ${BGFX_INCLUDE}
-
-    DEPENDS
-        ${QUAD_FRAGMENT_SHADER}
-        ${QUAD_VARYING_DEF}
-
-    COMMENT "Compiling quad fragment shader..."
-)
-
-# Shader target
-add_custom_target(shaders ALL
-    DEPENDS
-        ${VERTEX_OUTPUT}
-        ${FRAGMENT_OUTPUT}
-        ${QUAD_VERTEX_OUTPUT}
-        ${QUAD_FRAGMENT_OUTPUT}
-)
-
-# Make executable depend on shaders
-add_dependencies(draconic shaders)
-
-# Copy shader binaries to executable dir
 add_custom_command(
     TARGET draconic POST_BUILD
 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${VERTEX_OUTPUT}
-        $<TARGET_FILE_DIR:draconic>
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${FRAGMENT_OUTPUT}
-        $<TARGET_FILE_DIR:draconic>
-    
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${QUAD_VERTEX_OUTPUT}
-        $<TARGET_FILE_DIR:draconic>
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${QUAD_FRAGMENT_OUTPUT}
-        $<TARGET_FILE_DIR:draconic>
-
-    COMMENT "Copying compiled shaders..."
-)
-
-set(TEST_IMAGE ${CMAKE_SOURCE_DIR}/assets/draconic_logo_no_text.png)
-
-add_custom_command(
-    TARGET draconic POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
         ${TEST_IMAGE}
         $<TARGET_FILE_DIR:draconic>/test.png
+
+    COMMENT "Copying test texture..."
 )

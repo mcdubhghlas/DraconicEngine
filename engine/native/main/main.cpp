@@ -43,6 +43,16 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // Force SDL to pump initial setup events so Wayland can bake the surface
+    SDL_SyncWindow(window); 
+    for (int i = 0; i < 10; ++i) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            // Just consuming initial configuration events
+        }
+        SDL_Delay(10);
+    }
+
     draco::input::set_mouse_captured(window, true);
 
     auto handles = draco::platform::get_native_handles(window);
