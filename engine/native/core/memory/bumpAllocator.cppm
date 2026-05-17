@@ -97,7 +97,7 @@ export namespace draco::memory
 				{
 					spillover = ((*lastNode)->size - oldPos);
 				}
-				reqSize = (sizeof(Node) + size) & ~alignMask;
+				reqSize = (sizeof(Node) + size + alignMask) & ~alignMask;
 				err = allocData->base.vtbl->alloc(
 					allocData->base,
 					&newBlock,
