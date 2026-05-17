@@ -99,3 +99,24 @@ TEST_CASE("Bump allocator allocates second page when available")
 	REQUIRE(bumpAlloc.first->next != nullptr);
 	bump::deinit(&bumpAlloc);
 }
+
+TEST_CASE("Exact alignment")
+{
+	using namespace draco::memory;
+	bump::BumpAllocator bumpAlloc;
+	Allocator alloc;
+	Slice aSlice;
+	Slice bSlice;
+	Slice cSlice;
+	Error err;
+	bump::init(&bumpAlloc, page::pageAllocator);
+	bump::asAllocator(&alloc, &bumpAlloc);
+	err = alloc.vtbl->alloc(alloc, &aSlice, 5, 1);
+	REQUIRE(err == Error::Okay);
+	err = alloc.vtbl->alloc(alloc, &bSlice, 8, 8);
+	REQUIRE(err == Error::Okay);
+	err = alloc.vtbl->alloc(alloc, &cSlice, 4, 4);
+	REQUIRE(err == Error::Okay);
+	REQUIRE(bumpAlloc.allocated == 20);
+	bump::deinit(&bumpAlloc);
+}

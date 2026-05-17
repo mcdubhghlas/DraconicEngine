@@ -79,7 +79,6 @@ export namespace draco::memory
 			size_t spillover = 0;
 			Slice newBlock;
 			uintptr_t currentPtr;
-			assert(std::popcount(align) == 1);
 			lastNode = node;
 			while (((*node) != nullptr) & (pos > 0))
 			{
@@ -116,7 +115,7 @@ export namespace draco::memory
 				oldPos = 0;
 			}
 			currentPtr = ((uintptr_t)&((*lastNode)->data[oldPos]));
-			reqSize = (size + ((currentPtr - 1) & alignMask)) & ~alignMask;
+			reqSize = size + ((align - (currentPtr & alignMask)) & alignMask);
 			currentPtr = (currentPtr + alignMask) & ~alignMask;
 			allocData->allocated += reqSize + spillover;
 			dst->data = (void*)currentPtr;
