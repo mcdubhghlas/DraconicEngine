@@ -103,10 +103,15 @@ endif()
 set(VERTEX_SHADER "${SHADER_DIR}/vs.sc")
 set(FRAGMENT_SHADER "${SHADER_DIR}/fs.sc")
 set(VARYING_DEF   "${SHADER_DIR}/varying.def.sc")
+set(QUAD_VERTEX_SHADER   "${SHADER_DIR}/vs_quad.sc")
+set(QUAD_FRAGMENT_SHADER "${SHADER_DIR}/fs_quad.sc")
+set(QUAD_VARYING_DEF     "${SHADER_DIR}/varying_quad.def.sc")
 
 # Output binaries
 set(VERTEX_OUTPUT "${CMAKE_BINARY_DIR}/vs.bin")
 set(FRAGMENT_OUTPUT "${CMAKE_BINARY_DIR}/fs.bin")
+set(QUAD_VERTEX_OUTPUT   "${CMAKE_BINARY_DIR}/vs_quad.bin")
+set(QUAD_FRAGMENT_OUTPUT "${CMAKE_BINARY_DIR}/fs_quad.bin")
 
 # Compile vertex shader
 add_custom_command(
@@ -148,11 +153,51 @@ add_custom_command(
     COMMENT "Compiling fragment shader..."
 )
 
+add_custom_command(
+    OUTPUT ${QUAD_VERTEX_OUTPUT}
+
+    COMMAND ${SHADERC}
+        -f ${QUAD_VERTEX_SHADER}
+        -o ${QUAD_VERTEX_OUTPUT}
+        --type vertex
+        --platform ${SHADER_PLATFORM}
+        -p ${SHADER_PROFILE}
+        --varyingdef ${QUAD_VARYING_DEF}
+        -i ${BGFX_INCLUDE}
+
+    DEPENDS
+        ${QUAD_VERTEX_SHADER}
+        ${QUAD_VARYING_DEF}
+
+    COMMENT "Compiling quad vertex shader..."
+)
+
+add_custom_command(
+    OUTPUT ${QUAD_FRAGMENT_OUTPUT}
+
+    COMMAND ${SHADERC}
+        -f ${QUAD_FRAGMENT_SHADER}
+        -o ${QUAD_FRAGMENT_OUTPUT}
+        --type fragment
+        --platform ${SHADER_PLATFORM}
+        -p ${SHADER_PROFILE}
+        --varyingdef ${QUAD_VARYING_DEF}
+        -i ${BGFX_INCLUDE}
+
+    DEPENDS
+        ${QUAD_FRAGMENT_SHADER}
+        ${QUAD_VARYING_DEF}
+
+    COMMENT "Compiling quad fragment shader..."
+)
+
 # Shader target
 add_custom_target(shaders ALL
     DEPENDS
         ${VERTEX_OUTPUT}
         ${FRAGMENT_OUTPUT}
+        ${QUAD_VERTEX_OUTPUT}
+        ${QUAD_FRAGMENT_OUTPUT}
 )
 
 # Make executable depend on shaders
@@ -168,6 +213,14 @@ add_custom_command(
 
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${FRAGMENT_OUTPUT}
+        $<TARGET_FILE_DIR:draconic>
+    
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${QUAD_VERTEX_OUTPUT}
+        $<TARGET_FILE_DIR:draconic>
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${QUAD_FRAGMENT_OUTPUT}
         $<TARGET_FILE_DIR:draconic>
 
     COMMENT "Copying compiled shaders..."

@@ -22,7 +22,6 @@ import rendering.rhi.uniform_registry;
 import rendering.renderer;
 import rendering.mesh;
 import rendering.material;
-import rendering.rendergraph;
 import rendering.quad_renderer;
 
 int main(int argc, char* argv[])
@@ -55,7 +54,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // Init the RHI & Renderer
     if (!draco::rendering::rhi::init(handles.ndt, handles.nwh, 1280, 720)) {
         std::println("RHI init failed");
         SDL_DestroyWindow(window);
@@ -65,27 +63,11 @@ int main(int argc, char* argv[])
 
     draco::rendering::renderer::init(1280, 720);
 
-    draco::rendering::quad_renderer::QuadRenderer quad_renderer;
-    quad_renderer.init();
-    draco::rendering::rendergraph::RenderGraph graph;
-
-    auto& quad_pass = graph.add_pass("quad_pass");
-
-    quad_pass.view = 10;
-
-    quad_pass.width  = 1280;
-    quad_pass.height = 720;
-
-    quad_pass.clear_flags = BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH;
-
-    quad_pass.clear_color = 0x303030ff;
-
-
-    auto cube_mesh     = draco::rendering::mesh::create_cube();
-    auto plane_mesh    = draco::rendering::mesh::create_plane(5.0f);
-    auto sphere_mesh   = draco::rendering::mesh::create_sphere(24, 16);
-    auto cylinder_mesh = draco::rendering::mesh::create_cylinder(24, 2.0f);
-    auto capsule_mesh  = draco::rendering::mesh::create_capsule(24, 12, 2.0f);
+    auto cube_mesh = draco::rendering::mesh::create_cube(); 
+    auto plane_mesh = draco::rendering::mesh::create_plane(5.0f); 
+    auto sphere_mesh = draco::rendering::mesh::create_sphere(24, 16); 
+    auto cylinder_mesh = draco::rendering::mesh::create_cylinder(24, 2.0f); 
+    auto capsule_mesh = draco::rendering::mesh::create_capsule(24, 12, 2.0f);
 
     auto img = draco::core::io::image_loader::load_image("test.png");
 
@@ -100,7 +82,10 @@ int main(int argc, char* argv[])
     auto vs = draco::core::io::filesystem::load_binary("vs.bin");
     auto fs = draco::core::io::filesystem::load_binary("fs.bin");
 
-    if (vs.empty() || fs.empty()) {
+    auto vs_quad = draco::core::io::filesystem::load_binary("vs_quad.bin");
+    auto fs_quad = draco::core::io::filesystem::load_binary("fs_quad.bin");
+
+    if (vs.empty() || fs.empty() || vs_quad.empty() || fs_quad.empty()) {
         std::println("Shader load failed");
         draco::rendering::rhi::shutdown();
         SDL_DestroyWindow(window);
@@ -111,28 +96,18 @@ int main(int argc, char* argv[])
     auto vsh = draco::rendering::rhi::create_shader(vs.data(), (uint32_t)vs.size());
     auto fsh = draco::rendering::rhi::create_shader(fs.data(), (uint32_t)fs.size());
 
-    auto pipeline = draco::rendering::rhi::create_pipeline({
-        vsh,
-        fsh,
-        draco::rendering::rhi::PipelineState::WriteRGB |
-        draco::rendering::rhi::PipelineState::WriteAlpha |
-        draco::rendering::rhi::PipelineState::MSAA,
+    auto vsh_quad = draco::rendering::rhi::create_shader(vs_quad.data(), (uint32_t)vs_quad.size());
+    auto fsh_quad = draco::rendering::rhi::create_shader(fs_quad.data(), (uint32_t)fs_quad.size());
 
-        draco::rendering::rhi::BlendMode::None,
-        draco::rendering::rhi::DepthTest::Less,
-        draco::rendering::rhi::CullMode::CCW,
-        true
-    });
+    auto pipeline = draco::rendering::rhi::create_pipeline({vsh, fsh, draco::rendering::rhi::PipelineState::WriteRGB | draco::rendering::rhi::PipelineState::WriteAlpha | draco::rendering::rhi::PipelineState::MSAA, draco::rendering::rhi::BlendMode::None, draco::rendering::rhi::DepthTest::Less, draco::rendering::rhi::CullMode::CCW, true});
+
+    auto pipeline_quad = draco::rendering::rhi::create_pipeline({vsh_quad, fsh_quad, draco::rendering::rhi::PipelineState::WriteRGB | draco::rendering::rhi::PipelineState::WriteAlpha | draco::rendering::rhi::PipelineState::MSAA, draco::rendering::rhi::BlendMode::None, draco::rendering::rhi::DepthTest::None, draco::rendering::rhi::CullMode::None, true});
+
+    draco::rendering::quad_renderer::QuadRenderer quad_renderer;
+    quad_renderer.init(pipeline_quad);
 
     draco::scene::CameraController camera;
     camera.init();
-
-    draco::rendering::quad_renderer::OrthoCamera ortho;
-
-    draco::rendering::quad_renderer::QuadRenderer::build_ortho(ortho, 1280.0f, 720.0f);
-
-    std::memcpy(quad_pass.view_mtx, ortho.view, sizeof(float) * 16);
-    std::memcpy(quad_pass.proj_mtx, ortho.proj, sizeof(float) * 16);
 
     auto u_tint   = draco::rendering::rhi::create_uniform("u_tint",   draco::rendering::rhi::UniformType::Vec4);
     auto u_offset = draco::rendering::rhi::create_uniform("u_offset", draco::rendering::rhi::UniformType::Vec4);
@@ -148,7 +123,6 @@ int main(int argc, char* argv[])
     bool mouse_captured = true;
 
     draco::rendering::material::Material mat{};
-
     mat.pipeline = pipeline;
     mat.texture = tex;
     mat.sampler = s_texColor;
@@ -170,12 +144,11 @@ int main(int argc, char* argv[])
     draco::scene::transform::set_position(scene.renderables[2].transform, 0.0f, 0.0f, 0.0f);
     draco::scene::transform::set_position(scene.renderables[3].transform, 6.0f, 0.0f, 0.0f);
     draco::scene::transform::set_position(scene.renderables[4].transform, 12.0f, 0.0f, 0.0f);
-    
+
     draco::scene::transform::set_rotation(scene.renderables[1].transform, -bx::kPiHalf, 0.0f, 0.0f);
 
     while (running)
     {
-        // Delta time
         static uint64_t last = SDL_GetTicks();
         uint64_t now = SDL_GetTicks();
         float dt = (now - last) / 1000.0f;
@@ -189,64 +162,50 @@ int main(int argc, char* argv[])
             if (e.type == SDL_EVENT_QUIT)
                 running = false;
 
-            if (e.type == SDL_EVENT_KEY_DOWN)
+            if (e.type == SDL_EVENT_KEY_DOWN &&
+                e.key.key == SDLK_ESCAPE)
             {
-                if (e.key.key == SDLK_ESCAPE)
-                {
-                    mouse_captured = !mouse_captured;
-
-                    draco::input::set_mouse_captured(window, mouse_captured);
-                }
+                mouse_captured = !mouse_captured;
+                draco::input::set_mouse_captured(window, mouse_captured);
             }
 
             draco::input::process_event(e);
         }
 
-        static int dw = 1280; // Default width, it shouldn't be modified
-        static int dh = 720; // Default height, it shouldn't be modified
-
         int w, h;
         SDL_GetWindowSize(window, &w, &h);
 
-        if (w != dw || h != dh) {
-            draco::rendering::rhi::resize(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
-            draco::rendering::renderer::resize(static_cast<uint16_t>(w), static_cast<uint16_t>(h));
-            dw = w;
-            dh = h;
-        }
+        draco::rendering::rhi::resize((uint16_t)w, (uint16_t)h);
+        draco::rendering::renderer::resize((uint16_t)w, (uint16_t)h);
 
         camera.update(dt);
-
         auto cam = camera.get_camera();
 
         draco::rendering::renderer::begin_frame(cam);
-
         draco::rendering::renderer::render_scene(scene);
 
-        graph.reset();
-
         quad_renderer.begin();
+
+        static float quad_base_x = 400.0f;
+        static float quad_base_y = 300.0f;
 
         for (int i = 0; i < 50; i++)
         {
             draco::rendering::quad_renderer::QuadCommand q{};
 
             q.texture = tex;
-            q.x = 200.0f + std::sin(SDL_GetTicks() * 0.001f + i) * 200.0f;
-            q.y = 300.0f + i * 6.0f;
-            q.width = 20.0f + (i % 10);
-            q.height = 20.0f + (i % 10);
-            q.rotation = SDL_GetTicks() * 0.001f + i * 0.1f;
-
             q.color = 0xffffffff;
+            q.x = quad_base_x + std::sin(SDL_GetTicks() * 0.001f + i) * 50.0f;
+            q.y = quad_base_y + i * 6.0f;
+            q.width = 50.0f;
+            q.height = 50.0f;
+            q.rotation = SDL_GetTicks() * 0.001f;
 
             quad_renderer.submit(q);
         }
 
-        quad_renderer.flush_to_pass(quad_pass);
+        draco::rendering::renderer::submit_ui(quad_renderer);
 
-        graph.execute();
-        
         draco::rendering::renderer::end_frame();
     }
 

@@ -52,7 +52,7 @@ export namespace draco::rendering::quad_renderer {
         static constexpr uint32_t MaxVertices = MaxQuads * 4;
         static constexpr uint32_t MaxIndices  = MaxQuads * 6;
 
-        void init();
+        void init(draco::rendering::rhi::PipelineHandle pipeline);
 
         void begin();
 

@@ -73,18 +73,6 @@ target_link_libraries(material
     rhi
 )
 
-target_link_libraries(renderer
-    PUBLIC
-        core
-        rhi
-        rendergraph
-        mesh
-        scene
-        transform
-        bgfx
-        bx
-)
-
 add_modules_library(quad_renderer)
 
 target_sources(quad_renderer
@@ -99,4 +87,19 @@ target_link_libraries(quad_renderer
     PUBLIC
         rhi
         rendergraph
+        bgfx
+        bx
+)
+
+target_link_libraries(renderer
+    PUBLIC
+        core
+        rhi
+        rendergraph
+        mesh
+        quad_renderer
+        scene
+        transform
+        bgfx
+        bx
 )

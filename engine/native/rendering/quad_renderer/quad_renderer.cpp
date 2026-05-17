@@ -3,6 +3,9 @@ module;
 #include <algorithm>
 #include <cmath>
 
+#include <bgfx/bgfx.h>
+#include <bx/math.h>
+
 module rendering.quad_renderer;
 
 import rendering.rhi;
@@ -18,39 +21,23 @@ namespace draco::rendering::quad_renderer {
         {0.0f, 1.0f}
     };
 
-    void QuadRenderer::init()
+    void QuadRenderer::init(draco::rendering::rhi::PipelineHandle pipeline)
     {
         using namespace draco::rendering::rhi;
 
         VertexLayoutDesc layout{};
-
         layout.elements.push_back({Attrib::Position, 3, AttribType::Float});
-
         layout.elements.push_back({Attrib::TexCoord0, 2, AttribType::Float});
-
         layout.elements.push_back({Attrib::Color0, 4, AttribType::Uint8, true});
 
+        m_pipeline = pipeline;
         m_layout = create_vertex_layout(layout);
 
+        // Allocating dynamic streaming buffers
         m_vb = create_dynamic_vertex_buffer(sizeof(TexturedVertex) * MaxVertices, m_layout);
-
-        std::vector<uint16_t> indices;
-        indices.reserve(MaxIndices);
-
-        for (uint32_t i = 0; i < MaxQuads; i++)
-        {
-            uint16_t b = static_cast<uint16_t>(i * 4);
-
-            indices.push_back(b + 0);
-            indices.push_back(b + 1);
-            indices.push_back(b + 2);
-
-            indices.push_back(b + 2);
-            indices.push_back(b + 3);
-            indices.push_back(b + 0);
-        }
-
-        m_ib = create_index_buffer(indices.data(), static_cast<uint32_t>(indices.size() * sizeof(uint16_t)));
+        
+        // Pass BGFX_BUFFER_NONE implicitly to match tracking
+        m_ib = create_dynamic_index_buffer(MaxIndices * sizeof(uint16_t), BGFX_BUFFER_NONE);
 
         m_sampler = create_uniform("s_texColor", UniformType::Sampler);
     }
@@ -106,7 +93,7 @@ namespace draco::rendering::quad_renderer {
             {-hw,  hh}
         };
 
-        uint32_t start = static_cast<uint32_t>(m_vertices.size());
+        uint16_t start = static_cast<uint16_t>(m_vertices.size());
 
         for (int i = 0; i < 4; i++)
         {
@@ -144,20 +131,23 @@ namespace draco::rendering::quad_renderer {
         if (m_vertices.empty())
             return;
 
+        // Upload only the exact slices we are using this frame
         update_dynamic_vertex_buffer(m_vb, 0, m_vertices.data(), static_cast<uint32_t>(m_vertices.size() * sizeof(TexturedVertex)));
+        update_dynamic_index_buffer(m_ib, 0, m_indices.data(), static_cast<uint32_t>(m_indices.size() * sizeof(uint16_t)));
 
         RenderPacket pkt{};
-
         pkt.vertex_buffer  = m_vb;
         pkt.index_buffer   = m_ib;
-
-        pkt.pipeline = m_pipeline;
-
+        pkt.pipeline       = m_pipeline;
         pkt.texture_handle = m_batch_key.texture;
-
         pkt.sampler_uniform = m_sampler;
 
+        pkt.vertex_count   = static_cast<uint32_t>(m_vertices.size());
+        pkt.index_count    = static_cast<uint32_t>(m_indices.size());
+
         pkt.sort_key = make_sort_key(0, 0, static_cast<uint16_t>(m_pipeline.value), static_cast<uint16_t>(m_batch_key.texture.value), 0);
+
+        bx::mtxIdentity(pkt.model);
 
         pass.packets.push_back(pkt);
 

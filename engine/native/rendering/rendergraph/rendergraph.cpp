@@ -67,10 +67,7 @@ namespace draco::rendering::rendergraph {
 
     void RenderGraph::reset()
     {
-        for (auto& p : m_passes)
-        {
-            p.packets.clear();
-        }
+        m_passes.clear(); // Directly clear
     }
 
     Pass& RenderGraph::add_pass(const std::string& name)

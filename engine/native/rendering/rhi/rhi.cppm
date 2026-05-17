@@ -115,6 +115,7 @@ export namespace draco::rendering::rhi
         bgfx::VertexBufferHandle vbh = BGFX_INVALID_HANDLE;
         bgfx::DynamicVertexBufferHandle dvbh = BGFX_INVALID_HANDLE;
         bgfx::IndexBufferHandle  ibh = BGFX_INVALID_HANDLE;
+        bgfx::DynamicIndexBufferHandle dibh;
         bool is_dynamic = false;
         bool is_index = false;
     };
@@ -159,6 +160,9 @@ export namespace draco::rendering::rhi
         BufferHandle vertex_buffer = InvalidBuffer;
         BufferHandle index_buffer  = InvalidBuffer;
         PipelineHandle pipeline    = InvalidPipeline;
+
+        uint32_t vertex_count = UINT32_MAX; 
+        uint32_t index_count  = UINT32_MAX;
 
         UniformHandle sampler_uniform = InvalidUniform;
         SamplerHandle sampler_flags   = InvalidSampler;
@@ -207,6 +211,9 @@ export namespace draco::rendering::rhi
 
     BufferHandle create_dynamic_vertex_buffer(uint32_t size, LayoutHandle layout);
     void update_dynamic_vertex_buffer(BufferHandle handle, uint32_t start_vertex, const void* data, uint32_t size);
+
+    BufferHandle create_dynamic_index_buffer(uint32_t size, uint16_t flags = BGFX_BUFFER_NONE);
+    void update_dynamic_index_buffer(BufferHandle handle, uint32_t start_index, const void* data, uint32_t size);
 
     LayoutHandle create_vertex_layout(const VertexLayoutDesc& desc);
 

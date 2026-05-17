@@ -23,13 +23,22 @@ namespace draco::rendering::rhi
 
     #if DRACO_RHI_VALIDATION
         #define RHI_ASSERT(cond, msg, ...) \
-            if (!(cond)) { std::println("[RHI ERROR] " msg, ##__VA_ARGS__); std::abort(); }
+            do { \
+                if (!(cond)) { \
+                    std::println("[RHI ERROR] " msg, ##__VA_ARGS__); \
+                    std::abort(); \
+                } \
+            } while(0)
 
         #define RHI_WARN(cond, msg, ...) \
-            if (!(cond)) { std::println("[RHI WARNING] " msg, ##__VA_ARGS__); }
+            do { \
+                if (!(cond)) { \
+                    std::println("[RHI WARNING] " msg, ##__VA_ARGS__); \
+                } \
+            } while(0)
     #else
-        #define RHI_ASSERT(cond, msg, ...)
-        #define RHI_WARN(cond, msg, ...)
+        #define RHI_ASSERT(cond, msg, ...) do { (void)(cond); } while(0)
+        #define RHI_WARN(cond, msg, ...)   do { (void)(cond); } while(0)
     #endif
 
     using namespace draco::core::memory;
@@ -224,6 +233,8 @@ namespace draco::rendering::rhi
 
         bgfx::DynamicVertexBufferHandle dvbh = bgfx::createDynamicVertexBuffer(size, layout->layout);
 
+        RHI_ASSERT(bgfx::isValid(dvbh), "Failed to create dynamic vertex buffer");
+
         Buffer buf;
         buf.dvbh = dvbh;
         buf.is_dynamic = true;
@@ -233,10 +244,45 @@ namespace draco::rendering::rhi
 
     void update_dynamic_vertex_buffer(BufferHandle handle, uint32_t start_vertex, const void* data, uint32_t size)
     {
-        // Convert the vertex index into byte offset
+        auto* buf = get_checked(g_buffers, handle, "Buffer");
+
+        if (!buf)
+            return;
+
+        RHI_ASSERT(buf->is_dynamic && !buf->is_index, "Not a dynamic vertex buffer");
+        RHI_ASSERT(bgfx::isValid(buf->dvbh), "Invalid dynamic vertex buffer handle");
+
         const bgfx::Memory* mem = bgfx::copy(data, size);
 
-        bgfx::update(bgfx::DynamicVertexBufferHandle{static_cast<uint16_t>(handle.value)}, start_vertex, mem);
+        bgfx::update(buf->dvbh, start_vertex, mem);
+    }
+
+    BufferHandle create_dynamic_index_buffer(uint32_t size, uint16_t flags)
+    {
+        bgfx::DynamicIndexBufferHandle ibh = bgfx::createDynamicIndexBuffer(size, flags);
+
+        RHI_ASSERT(bgfx::isValid(ibh), "Invalid dynamic index buffer handle");
+
+        Buffer buf{};
+        buf.is_dynamic = true;
+        buf.is_index = true;
+        buf.dibh = ibh;
+
+        return g_buffers.create(buf);
+    }
+
+    void update_dynamic_index_buffer(BufferHandle handle, uint32_t start_index, const void* data, uint32_t size)
+    {
+        auto* buf = get_checked(g_buffers, handle, "DynamicIndexBuffer");
+
+        if (!buf)
+            return;
+
+        RHI_ASSERT(buf->is_dynamic && buf->is_index, "Not a dynamic index buffer");
+
+        const bgfx::Memory* mem = bgfx::copy(data, size);
+
+        bgfx::update(buf->dibh, start_index, mem);
     }
 
     void destroy_buffer(BufferHandle h)
@@ -254,6 +300,9 @@ namespace draco::rendering::rhi
 
         if (bgfx::isValid(buf->dvbh))
             destroy_later(buf->dvbh);
+        
+        if (bgfx::isValid(buf->dibh))
+            destroy_later(buf->dibh);
 
         g_buffers.destroy(h);
     }
@@ -267,6 +316,11 @@ namespace draco::rendering::rhi
         {
             layout.add(map_attrib(e.attrib), e.count, map_attrib_type(e.type), e.normalized);
         }
+
+        RHI_WARN(false, "Calculated Stride: {} bytes (Expected: 24)", layout.getStride());
+        RHI_WARN(false, "Position Offset:  {}", layout.getOffset(map_attrib(Attrib::Position)));
+        RHI_WARN(false, "Color0 Offset:    {}", layout.getOffset(map_attrib(Attrib::Color0)));
+        RHI_WARN(false, "TexCoord0 Offset: {}", layout.getOffset(map_attrib(Attrib::TexCoord0)));
 
         layout.end();
 
@@ -523,6 +577,7 @@ namespace draco::rendering::rhi
     {
         auto* pipeline = get_checked(g_pipelines, p.pipeline, "Pipeline");
         auto* vb = get_checked(g_buffers, p.vertex_buffer, "VertexBuffer");
+        auto* ib = get_checked(g_buffers, p.index_buffer, "IndexBuffer");
 
         if (!pipeline || !vb)
             return;
@@ -530,17 +585,24 @@ namespace draco::rendering::rhi
         // Transform matrix (model)
         bgfx::setTransform(p.model);
 
-        // Vertex buffer binding
+        // Vertex buffer binding with explicit range control
         if (vb->is_dynamic)
-            bgfx::setVertexBuffer(0, vb->dvbh);
-        else
-            bgfx::setVertexBuffer(0, vb->vbh);
-
-        // Index buffer binding
-        if (auto* ib = get_checked(g_buffers, p.index_buffer, "IndexBuffer"))
         {
-            if (ib->is_index)
-                bgfx::setIndexBuffer(ib->ibh);
+            // If count is UINT32_MAX, bgfx will fallback to drawing the full buffer automatically
+            bgfx::setVertexBuffer(0, vb->dvbh, 0, p.vertex_count);
+        } else {
+            bgfx::setVertexBuffer(0, vb->vbh, 0, p.vertex_count);
+        }
+
+        // Index buffer binding with explicit range control
+        if (ib && ib->is_index)
+        {
+            if (ib->is_dynamic)
+            {
+                bgfx::setIndexBuffer(ib->dibh, 0, p.index_count);
+            } else {
+                bgfx::setIndexBuffer(ib->ibh, 0, p.index_count);
+            }
         }
 
         // Uniforms

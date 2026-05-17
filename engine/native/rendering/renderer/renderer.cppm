@@ -14,6 +14,7 @@ export module rendering.renderer;
 
 import rendering.rhi;
 import rendering.rendergraph;
+import rendering.quad_renderer;
 
 import scene;
 
@@ -48,4 +49,8 @@ export namespace draco::rendering::renderer {
     void end_frame();
 
     void render_scene(const draco::scene::Scene& scene);
+
+    void submit_ui(draco::rendering::quad_renderer::QuadRenderer& quad_renderer);
+
+    rendergraph::RenderGraph& get_graph();
 }

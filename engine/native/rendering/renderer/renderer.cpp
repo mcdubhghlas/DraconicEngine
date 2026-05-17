@@ -19,6 +19,7 @@ import rendering.rhi.uniform_registry;
 import rendering.rendergraph;
 import rendering.mesh;
 import rendering.material;
+import rendering.quad_renderer;
 
 import scene;
 import scene.transform;
@@ -131,9 +132,38 @@ namespace draco::rendering::renderer
         }
     }
 
+    void submit_ui(draco::rendering::quad_renderer::QuadRenderer& quad_renderer)
+    {
+        auto& ui_pass = g_ctx.graph.add_pass("UIPass");
+
+        ui_pass.view = 1;
+        ui_pass.sort_mode = rendergraph::SortMode::None;
+
+        ui_pass.framebuffer = rhi::InvalidFramebuffer;
+
+        ui_pass.width  = g_ctx.screen_width;
+        ui_pass.height = g_ctx.screen_height;
+
+        ui_pass.clear_flags = 0;
+
+        draco::rendering::quad_renderer::OrthoCamera ortho;
+
+        draco::rendering::quad_renderer::QuadRenderer::build_ortho(ortho, (float)g_ctx.screen_width, (float)g_ctx.screen_height);
+
+        std::memcpy(ui_pass.view_mtx, ortho.view, sizeof(float) * 16);
+        std::memcpy(ui_pass.proj_mtx, ortho.proj, sizeof(float) * 16);
+
+        quad_renderer.flush_to_pass(ui_pass);
+    }
+
     void end_frame()
     {
         g_ctx.graph.execute();
         rhi::end_frame();
+    }
+
+    rendergraph::RenderGraph& get_graph()
+    {
+        return draco::rendering::renderer::g_ctx.graph;
     }
 }
