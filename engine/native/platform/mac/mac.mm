@@ -13,9 +13,9 @@ namespace draco::platform {
         
         SDL_PropertiesID props = SDL_GetWindowProperties(window);
 
-        // We grab the NSView pointer for the native window handle
         frame.nwh = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_COCOA_VIEW_POINTER, nullptr);
         frame.ndt = nullptr; 
+        frame.type = NativeWindowType::Cocoa;
 
         SDL_GetWindowSize(window, &frame.width, &frame.height);
         frame.valid = (frame.nwh != nullptr);

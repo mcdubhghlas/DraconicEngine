@@ -15,6 +15,7 @@ namespace draco::platform {
 
         frame.nwh = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
         frame.ndt = nullptr; // Note: On Windows, ndt isn't required by bgfx for the Vulkan & DX backends which is why we leave it as a nullptr
+        frame.type = NativeWindowType::Win32;
 
         SDL_GetWindowSize(window, &frame.width, &frame.height);
         frame.valid = (frame.nwh != nullptr);

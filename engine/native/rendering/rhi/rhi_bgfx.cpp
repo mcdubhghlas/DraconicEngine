@@ -100,7 +100,7 @@ namespace draco::rendering::rhi
         });
     }
 
-    bool init(void* display_type, void* window_handle, uint16_t width, uint16_t height)
+    bool init(void* display_type, void* window_handle, draco::platform::NativeWindowType window_type, uint16_t width, uint16_t height)
     {
         g_width = width;
         g_height = height;
@@ -110,6 +110,17 @@ namespace draco::rendering::rhi
 
         init.platformData.ndt = display_type;
         init.platformData.nwh = window_handle;
+
+        // Map our internal window type to bgfx's native window handle type
+        if (window_type == draco::platform::NativeWindowType::Wayland)
+        {
+            init.platformData.type = bgfx::NativeWindowHandleType::Wayland;
+        }
+        else
+        {
+            // Others can work fine with the default type
+            init.platformData.type = bgfx::NativeWindowHandleType::Default;
+        }
 
         init.resolution.width  = width;
         init.resolution.height = height;

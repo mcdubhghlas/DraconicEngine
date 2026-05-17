@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    if (!draco::rendering::rhi::init(handles.ndt, handles.nwh, 1280, 720)) {
+    if (!draco::rendering::rhi::init(handles.ndt, handles.nwh, handles.type, 1280, 720)) {
         std::println("RHI init failed");
         SDL_DestroyWindow(window);
         SDL_Quit();

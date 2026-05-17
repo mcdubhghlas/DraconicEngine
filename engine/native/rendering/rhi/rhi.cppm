@@ -13,6 +13,7 @@ module;
 export module rendering.rhi;
 
 import core.memory;
+import platform;
 import rendering.rhi.vertex;
 
 export namespace draco::rendering::rhi
@@ -188,7 +189,7 @@ export namespace draco::rendering::rhi
         uint64_t state;
     };
 
-    bool init(void* display_type, void* window_handle, uint16_t width, uint16_t height);
+    bool init(void* display_type, void* window_handle, draco::platform::NativeWindowType window_type, uint16_t width, uint16_t height);
     void resize(uint16_t width, uint16_t height);
     void shutdown();
 
