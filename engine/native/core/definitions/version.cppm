@@ -1,29 +1,29 @@
 module;
 
-#include <cstdint>
 #include <format>
 
 export module core.version;
+import core.stdtypes;
 
 export namespace draco {
 
-    struct Version {
-        std::uint16_t major;
-        std::uint16_t minor;
-        std::uint16_t patch;
-    };
+struct Version {
+  u16 major;
+  u16 minor;
+  u16 patch;
+};
 
-    constexpr Version VERSION { .major = 2026, .minor = 0, .patch = 0 };
-}
+constexpr Version VERSION{.major = 2026, .minor = 0, .patch = 0};
+} // namespace draco
 
 export namespace std {
-    template<> struct formatter<draco::Version> {
-        constexpr auto parse(std::format_parse_context& ctx) {
-            return ctx.begin(); // Accept any format spec (or parse custom ones)
-        }
+template <> struct formatter<draco::Version> {
+  constexpr auto parse(std::format_parse_context &ctx) {
+    return ctx.begin(); // Accept any format spec (or parse custom ones)
+  }
 
-        auto format(const draco::Version& v, std::format_context& ctx) const {
-            return std::format_to(ctx.out(), "{}.{}.{}", v.major, v.minor, v.patch);
-        }
-    };
-}
+  auto format(const draco::Version &v, std::format_context &ctx) const {
+    return std::format_to(ctx.out(), "{}.{}.{}", v.major, v.minor, v.patch);
+  }
+};
+} // namespace std
