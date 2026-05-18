@@ -5,6 +5,7 @@ module;
 
 export module core.math.constants;
 import core.defs;
+import core.stdtypes;
 
 export namespace draco::math {
     // Limit the depth of recursive algorithms
@@ -24,7 +25,7 @@ export namespace draco::math {
     constexpr float NaN = std::numeric_limits<float>::quiet_NaN();
     constexpr float DB_CONVERSION_GAIN = 8.6858896380650365530225783783321;
     constexpr float GAIN_CONVERSION_DB = 0.11512925464970228420089957273422;
-    constexpr float UINT32_MAX_F = 1.f / std::numeric_limits<uint32_t>::max();
+    constexpr float UINT32_MAX_F = 1.f / std::numeric_limits<u32>::max();
     constexpr float DECIMAL_LIMIT_F = 8388608.0f;
 
     constexpr float CMP_EPSILON = 0.000001f;
