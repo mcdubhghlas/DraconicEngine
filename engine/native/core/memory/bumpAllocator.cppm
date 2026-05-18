@@ -13,8 +13,6 @@ export namespace draco::memory
 {
 	namespace bump
 	{
-		struct Node;
-
 		struct Node
 		{
 			Node *next;
