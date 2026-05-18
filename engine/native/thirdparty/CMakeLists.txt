@@ -1,8 +1,17 @@
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # Don't scan for modules since it causes issues with deps
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Fix Clang 20 implicit function declarations in bgfx thirdparty C dependencies by exposing POSIX extensions
+if(NOT WIN32)
+    add_compile_definitions(_GNU_SOURCE)
+endif()
+
 set(BGFX_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BGFX_BUILD_TOOLS ON CACHE BOOL "" FORCE) # We need this for shaderc
+set(BGFX_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_SHADER ON CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_TEXTURE OFF CACHE BOOL "" FORCE)
+set(BGFX_BUILD_TOOLS_GEOMETRY OFF CACHE BOOL "" FORCE)
+
 set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
 set(BGFX_LIBRARY_TYPE "STATIC")
 
