@@ -1,13 +1,16 @@
+
 name: Draconic Engine Linux Build
+
 description: Build Draconic Engine on Linux using Clang 20 and CMake with Ninja
 
 on:
   push:
     branches:
-      - '**'        # Run on every single branch push
+      - '**'
+
   pull_request:
     branches:
-      - '**'        # Run on every single PR target branch
+      - '**'
 
 jobs:
   build-linux:
@@ -17,47 +20,78 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
         with:
-          submodules: recursive # Pulls in the thirdparty libs (SDL3, bgfx, etc.)
+          submodules: recursive
 
       - name: Set up Clang Compiler
         uses: egor-tensin/setup-clang@v1
         with:
-          version: 20 # Use Clang 20 for C++23 support
+          version: 20
 
-      # Install necessary system dependencies for building on Linux
+      - name: Install CMake 4.3.0
+        run: |
+          wget https://github.com/Kitware/CMake/releases/download/v4.3.0/cmake-4.3.0-linux-x86_64.tar.gz
+
+          tar -xzf cmake-4.3.0-linux-x86_64.tar.gz
+
+          echo "$(pwd)/cmake-4.3.0-linux-x86_64/bin" >> $GITHUB_PATH
+
       - name: Install Linux System Dependencies
         run: |
           sudo apt-get update
+
           sudo apt-get install -y \
-            cmake \
             ninja-build \
+            llvm-20 \
+            llvm-20-tools \
+            clang-tools-20 \
+            libc++-20-dev \
+            libc++abi-20-dev \
+            libgl1-mesa-dev \
+            libegl1-mesa-dev \
+            libwayland-egl1-mesa \
             libasound2-dev \
             libpulse-dev \
             libwayland-dev \
             libx11-dev \
+            libxext-dev \
+            libxrender-dev \
             libxrandr-dev \
             libxinerama-dev \
             libxcursor-dev \
-            libxi-dev
+            libxi-dev \
+            libxtst-dev
 
-      - name: Configure CMake Cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            build/.cmake/
-            build/CMakeCache.txt
-            build/CMakeFiles/
-          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-
+          echo "/usr/lib/llvm-20/bin" >> $GITHUB_PATH
+
+      - name: Verify LLVM Toolchain
+        run: |
+          which clang
+          which clang++
+          which clang-scan-deps
+
+          clang --version
+          clang++ --version
+          clang-scan-deps --version
 
       - name: Configure Build System
         run: |
-          cmake -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
+          rm -rf build/debug
+
+          cmake --preset debug \
+            -B build/debug \
+            -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_C_COMPILER=clang
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++" \
+            -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"
 
       - name: Compile Target Binary
         run: |
-          cmake --build build --config Debug
+          cmake --build build/debug -j$(nproc)
+
+      - name: Upload Engine Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: draconic-linux-debug
+          path: build/debug/draconic
+          if-no-files-found: error
+          retention-days: 7
