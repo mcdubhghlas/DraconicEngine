@@ -4,6 +4,7 @@ module;
 #include <cstdint>
 #include <cstring>
 #include <print>
+#include <algorithm>
 
 #include <bx/math.h>
 #include <bgfx/bgfx.h>
