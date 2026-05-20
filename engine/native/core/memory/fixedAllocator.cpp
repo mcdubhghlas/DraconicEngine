@@ -2,7 +2,6 @@ module;
 
 #include <bit>
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 module core.memory.fixedAllocator;
@@ -19,13 +18,13 @@ namespace draco::memory::fixed
 	Error alloc(
 		Allocator alloc,
 		Slice *dst,
-		size_t size,
-		size_t align
+		usize size,
+		usize align
 	)
 	{
 		FixedAllocator *allocData = (FixedAllocator*)alloc.allocatorData;
-		size_t alignMask = align - 1;
-		size_t alignedSize = allocData->size - (
+		usize alignMask = align - 1;
+		usize alignedSize = allocData->size - (
 			(align - (((uintptr_t)allocData->buffer) & alignMask))
 			& alignMask
 		);

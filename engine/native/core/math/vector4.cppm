@@ -17,6 +17,7 @@ export import :common;
 import core.math.constants;
 import core.math.functions;
 import core.defs;
+import core.stdtypes;
 
 export namespace draco::math {
     // assertions
@@ -26,52 +27,52 @@ export namespace draco::math {
     static_assert(std::is_standard_layout_v<Vector4>, "Vector4 must be standard layout");
 
     // constructors
-    [[nodiscard]] constexpr Vector4::Vector4(const float n) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const f32 n) noexcept
         : x{n}, y{n}, z{n}, w{n} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const float x, const float y, const float z, const float w) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const f32 x, const f32 y, const f32 z, const f32 w) noexcept
         : x{x}, y{y}, z{z}, w{w} { }
 
     [[nodiscard]] constexpr Vector4::Vector4(const Vector2& xy) noexcept
         : x{xy.x}, y{xy.y}, z{0.0f}, w{0.0f} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const Vector2& xy, const float z, const float w) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const Vector2& xy, const f32 z, const f32 w) noexcept
         : x{xy.x}, y{xy.y}, z{z}, w{w} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const float x, const Vector2& yz, const float w) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const f32 x, const Vector2& yz, const f32 w) noexcept
         : x{x}, y{yz.x}, z{yz.y}, w{w} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const float x, const float y, const Vector2& zw) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const f32 x, const f32 y, const Vector2& zw) noexcept
         : x{x}, y{y}, z{zw.x}, w{zw.y} { }
 
     [[nodiscard]] constexpr Vector4::Vector4(const Vector2& xy, const Vector2& zw) noexcept
         : x{xy.x}, y{xy.y}, z{zw.x}, w{zw.y} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const Vector3& xyz, const float w) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const Vector3& xyz, const f32 w) noexcept
         : x{xyz.x}, y{xyz.y}, z{xyz.z}, w{w} { }
 
-    [[nodiscard]] constexpr Vector4::Vector4(const float x, const Vector3& yzw) noexcept
+    [[nodiscard]] constexpr Vector4::Vector4(const f32 x, const Vector3& yzw) noexcept
         : x{x}, y{yzw.x}, z{yzw.y}, w{yzw.z} { }
     
     // static
-    [[nodiscard]] constexpr Vector4 Vector4::x_axis(const float x) noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::x_axis(const f32 x) noexcept {
         return { x, 0.0f, 0.0f, 0.0f };
     }
 
-    [[nodiscard]] constexpr Vector4 Vector4::y_axis(const float y) noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::y_axis(const f32 y) noexcept {
         return { 0.0f, y, 0.0f, 0.0f };
     }
 
-    [[nodiscard]] constexpr Vector4 Vector4::z_axis(const float z) noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::z_axis(const f32 z) noexcept {
         return { 0.0f, 0.0f, z, 0.0f };
     }
 
-    [[nodiscard]] constexpr Vector4 Vector4::w_axis(const float w) noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::w_axis(const f32 w) noexcept {
         return { 0.0f, 0.0f, 0.0f, w };
     }
 
     // element access
-    [[nodiscard]] constexpr float& Vector4::operator[](const int i) noexcept {
+    [[nodiscard]] constexpr f32& Vector4::operator[](const i32 i) noexcept {
         if consteval {
             switch (i) {
                 case 0: return x;
@@ -83,7 +84,7 @@ export namespace draco::math {
         } else { return (&x)[i]; }
     }
 
-    [[nodiscard]] constexpr const float& Vector4::operator[](const int i) const noexcept {
+    [[nodiscard]] constexpr const f32& Vector4::operator[](const i32 i) const noexcept {
         if consteval {
             switch (i) {
                 case 0: return x;
@@ -96,7 +97,7 @@ export namespace draco::math {
     }
 
     // swizzle
-    [[nodiscard]] constexpr Vector2 Vector4::operator[](const int i0, const int i1) noexcept {
+    [[nodiscard]] constexpr Vector2 Vector4::operator[](const i32 i0, const i32 i1) noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w) };
         } else {
@@ -104,7 +105,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] constexpr Vector2 Vector4::operator[](const int i0, const int i1) const noexcept {
+    [[nodiscard]] constexpr Vector2 Vector4::operator[](const i32 i0, const i32 i1) const noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w) };
         } else {
@@ -112,7 +113,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] constexpr Vector3 Vector4::operator[](const int i0, const int i1, const int i2) noexcept {
+    [[nodiscard]] constexpr Vector3 Vector4::operator[](const i32 i0, const i32 i1, const i32 i2) noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w), select(i2, x, y, z, w) };
         } else {
@@ -120,7 +121,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] constexpr Vector3 Vector4::operator[](const int i0, const int i1, const int i2) const noexcept {
+    [[nodiscard]] constexpr Vector3 Vector4::operator[](const i32 i0, const i32 i1, const i32 i2) const noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w), select(i2, x, y, z, w) };
         } else {
@@ -128,7 +129,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] constexpr Vector4 Vector4::operator[](const int i0, const int i1, const int i2, const int i3) noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::operator[](const i32 i0, const i32 i1, const i32 i2, const i32 i3) noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w), select(i2, x, y, z, w), select(i3, x, y, z, w)  };
         } else {
@@ -136,7 +137,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] constexpr Vector4 Vector4::operator[](const int i0, const int i1, const int i2, const int i3) const noexcept {
+    [[nodiscard]] constexpr Vector4 Vector4::operator[](const i32 i0, const i32 i1, const i32 i2, const i32 i3) const noexcept {
         if consteval {
             return { select(i0, x, y, z, w), select(i1, x, y, z, w), select(i2, x, y, z, w), select(i3, x, y, z, w)  };
         } else {
@@ -153,7 +154,7 @@ export namespace draco::math {
         return *this;
     }
 
-    constexpr Vector4& Vector4::operator+=(const float other) noexcept {
+    constexpr Vector4& Vector4::operator+=(const f32 other) noexcept {
         x += other;
         y += other;
         z += other;
@@ -169,7 +170,7 @@ export namespace draco::math {
         return *this;
     }
 
-    constexpr Vector4& Vector4::operator-=(const float other) noexcept {
+    constexpr Vector4& Vector4::operator-=(const f32 other) noexcept {
         x -= other;
         y -= other;
         z -= other;
@@ -185,7 +186,7 @@ export namespace draco::math {
         return *this;
     }
 
-    constexpr Vector4& Vector4::operator*=(const float other) noexcept {
+    constexpr Vector4& Vector4::operator*=(const f32 other) noexcept {
         x *= other;
         y *= other;
         z *= other;
@@ -201,8 +202,8 @@ export namespace draco::math {
         return *this;
     }
 
-    constexpr Vector4& Vector4::operator/=(const float other) noexcept {
-        const float inv = 1.0f / other;
+    constexpr Vector4& Vector4::operator/=(const f32 other) noexcept {
+        const f32 inv = 1.0f / other;
         x *= inv;
         y *= inv;
         z *= inv;
@@ -210,7 +211,7 @@ export namespace draco::math {
         return *this;
     }
 
-    constexpr Vector4& Vector4::operator=(const float other) noexcept {
+    constexpr Vector4& Vector4::operator=(const f32 other) noexcept {
         x = other;
         y = other;
         z = other;
@@ -230,11 +231,11 @@ export namespace draco::math {
         return { a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w };
     }
 
-    [[nodiscard]] constexpr Vector4 operator+(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator+(const Vector4& a, const f32 b) noexcept {
         return { a.x+b, a.y+b, a.z+b, a.w+b };
     }
 
-    [[nodiscard]] constexpr Vector4 operator+(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator+(const f32 a, const Vector4& b) noexcept {
         return b+a;
     }
 
@@ -242,11 +243,11 @@ export namespace draco::math {
         return { a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w };
     }
 
-    [[nodiscard]] constexpr Vector4 operator-(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator-(const Vector4& a, const f32 b) noexcept {
         return { a.x-b, a.y-b, a.z-b, a.w-b };
     }
 
-    [[nodiscard]] constexpr Vector4 operator-(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator-(const f32 a, const Vector4& b) noexcept {
         return { a-b.x, a-b.y, a-b.z, a-b.w };
     }
 
@@ -254,11 +255,11 @@ export namespace draco::math {
         return { a.x*b.x, a.y*b.y, a.z*b.z, a.w*b.w };
     }
 
-    [[nodiscard]] constexpr Vector4 operator*(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator*(const Vector4& a, const f32 b) noexcept {
         return { a.x*b, a.y*b, a.z*b, a.w*b };
     }
 
-    [[nodiscard]] constexpr Vector4 operator*(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator*(const f32 a, const Vector4& b) noexcept {
         return b*a;
     }
 
@@ -266,18 +267,18 @@ export namespace draco::math {
         return { a.x/b.x, a.y/b.y, a.z/b.z, a.w/b.w };
     }
     
-    [[nodiscard]] constexpr Vector4 operator/(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator/(const Vector4& a, const f32 b) noexcept {
         return a * (1.0f / b);
     }
     
-    [[nodiscard]] constexpr Vector4 operator/(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 operator/(const f32 a, const Vector4& b) noexcept {
         return { a/b.x, a/b.y, a/b.z, a/b.w };
     }
 
     // functions
     
     // Returns dot product
-    [[nodiscard]] constexpr float dot(const Vector4& a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr f32 dot(const Vector4& a, const Vector4& b) noexcept {
         if !consteval {
             #if ARCH_X64
                 // There's only 4 floats, so SSE is what we will use.
@@ -306,28 +307,28 @@ export namespace draco::math {
     }
 
     // Returns squared magnitude
-    [[nodiscard]] constexpr float length_sq(const Vector4& v) noexcept {
+    [[nodiscard]] constexpr f32 length_sq(const Vector4& v) noexcept {
         return dot(v, v);
     }
 
     // Returns magnitude
-    [[nodiscard]] float length(const Vector4& v) noexcept {
+    [[nodiscard]] f32 length(const Vector4& v) noexcept {
         return std::sqrt(length_sq(v));
     }
 
     // Return squared distance between two vectors
-    [[nodiscard]] constexpr float distance_sq(const Vector4& a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr f32 distance_sq(const Vector4& a, const Vector4& b) noexcept {
         return length_sq(a - b);
     }
 
     // Returns distance between two vectors
-    [[nodiscard]] float distance(const Vector4& a, const Vector4& b) noexcept {
+    [[nodiscard]] f32 distance(const Vector4& a, const Vector4& b) noexcept {
         return length(a - b);
     }
 
     // Safe normalize, checks length
     [[nodiscard]] Vector4 normalize(const Vector4& v) noexcept {
-        const float len = length(v);
+        const f32 len = length(v);
 
         return (len > CMP_NORMALIZE_TOLERANCE) ? v / len : Vector4();
     }
@@ -349,12 +350,12 @@ export namespace draco::math {
     }
 
     // Returns the angle between two vectors
-    [[nodiscard]] float angle(const Vector4& a, const Vector4& b) noexcept {
+    [[nodiscard]] f32 angle(const Vector4& a, const Vector4& b) noexcept {
         return std::acos(dot(a, b) / (length(a) * length(b)));
     }
 
     // Returns linear interpolation between two vectors
-    [[nodiscard]] constexpr Vector4 lerp(const Vector4& from, const Vector4& to, const float weight) noexcept {
+    [[nodiscard]] constexpr Vector4 lerp(const Vector4& from, const Vector4& to, const f32 weight) noexcept {
         return {
             lerp(from.x, to.x, weight),
             lerp(from.y, to.y, weight),
@@ -373,7 +374,7 @@ export namespace draco::math {
         };
     }
 
-    [[nodiscard]] constexpr Vector4 min(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 min(const Vector4& a, const f32 b) noexcept {
         return {
             std::min(a.x, b),
             std::min(a.y, b),
@@ -382,7 +383,7 @@ export namespace draco::math {
         };
     }
 
-    [[nodiscard]] constexpr Vector4 min(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 min(const f32 a, const Vector4& b) noexcept {
         return min(b, a);
     }
 
@@ -392,8 +393,8 @@ export namespace draco::math {
     }
 
     // Returns a vector in the same direction whose length is bounded above by the given value.
-    [[nodiscard]] Vector4 min_length(const Vector4& a, const float b) noexcept {
-        const float len_sq = length_sq(a);
+    [[nodiscard]] Vector4 min_length(const Vector4& a, const f32 b) noexcept {
+        const f32 len_sq = length_sq(a);
         
         if (len_sq > b * b) {
             return a * (b / std::sqrt(len_sq));
@@ -402,7 +403,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] Vector4 min_length(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] Vector4 min_length(const f32 a, const Vector4& b) noexcept {
         return min_length(b, a);
     }
 
@@ -416,7 +417,7 @@ export namespace draco::math {
         };
     }
 
-    [[nodiscard]] constexpr Vector4 max(const Vector4& a, const float b) noexcept {
+    [[nodiscard]] constexpr Vector4 max(const Vector4& a, const f32 b) noexcept {
         return {
             std::max(a.x, b),
             std::max(a.y, b),
@@ -425,7 +426,7 @@ export namespace draco::math {
         };
     }
 
-    [[nodiscard]] constexpr Vector4 max(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] constexpr Vector4 max(const f32 a, const Vector4& b) noexcept {
         return max(b, a);
     }
 
@@ -435,8 +436,8 @@ export namespace draco::math {
     }
 
     // Returns a vector in the same direction whose length is bounded below by the given value. Returns the 0 vector if the vector is too small to be normalized.
-    [[nodiscard]] Vector4 max_length(const Vector4& a, const float b) noexcept {
-        const float len_sq = length_sq(a);
+    [[nodiscard]] Vector4 max_length(const Vector4& a, const f32 b) noexcept {
+        const f32 len_sq = length_sq(a);
         
         if (len_sq <= CMP_NORMALIZE_TOLERANCE2) {
             return Vector4();
@@ -447,7 +448,7 @@ export namespace draco::math {
         }
     }
 
-    [[nodiscard]] Vector4 max_length(const float a, const Vector4& b) noexcept {
+    [[nodiscard]] Vector4 max_length(const f32 a, const Vector4& b) noexcept {
         return max_length(b, a);
     }
 
@@ -456,13 +457,13 @@ export namespace draco::math {
         return max(x_min, min(x, x_max));
     }
 
-    [[nodiscard]] constexpr Vector4 clamp(const Vector4& x, const float x_min, const float x_max) noexcept {
+    [[nodiscard]] constexpr Vector4 clamp(const Vector4& x, const f32 x_min, const f32 x_max) noexcept {
         return max(x_min, min(x, x_max));
     }
 
     // Clamps the length of the vector to the range [x_min, x_max]. Presupposes x_min <= x_max. Returns the 0 vector if the vector is too small to be normalized.
-    [[nodiscard]] Vector4 clamp_length(const Vector4& v, const float x_min, const float x_max) noexcept {
-        const float len_sq = length_sq(v);
+    [[nodiscard]] Vector4 clamp_length(const Vector4& v, const f32 x_min, const f32 x_max) noexcept {
+        const f32 len_sq = length_sq(v);
         
         if (len_sq <= CMP_NORMALIZE_TOLERANCE2) {
             return Vector4();
@@ -542,13 +543,13 @@ export namespace draco::math {
 } // namespace draco::math
 
 export namespace std {
-    template<> struct formatter<draco::math::Vector4> : formatter<float> {
+    template<> struct formatter<draco::math::Vector4> : formatter<draco::f32> {
         auto format(const draco::math::Vector4& v, format_context& ctx) const {
             ctx.advance_to(format_to(ctx.out(), "{{"));
 
-            for (int i = 0; i < 4; ++i) {
+            for (draco::i32 i = 0; i < 4; ++i) {
                 if (i) ctx.advance_to(format_to(ctx.out(), ", "));
-                ctx.advance_to(formatter<float>::format(v[i], ctx));
+                ctx.advance_to(formatter<draco::f32>::format(v[i], ctx));
             }
 
             return format_to(ctx.out(), "}}");

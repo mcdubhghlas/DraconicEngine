@@ -1,9 +1,8 @@
 module;
 
-#include <cstddef>
-
 export module core.memory.allocator;
 export import core.memory.slice;
+export import core.stdtypes;
 
 export namespace draco::memory
 {
@@ -30,8 +29,8 @@ export namespace draco::memory
 		using AllocFn = Error (*)(
 			Allocator alloc,
 			Slice *dst,
-			size_t size,
-			size_t align
+			usize size,
+			usize align
 		);
 		using FreeFn = Error (*)(Allocator alloc, Slice block);
 		using FreeAllFn = Error (*)(Allocator alloc);
@@ -43,13 +42,13 @@ export namespace draco::memory
 	Error nilAlloc(
 		Allocator alloc,
 		Slice *dst,
-		size_t size,
-		size_t align
+		usize size,
+		usize align
 	);
 
 	Error nilFree(Allocator alloc, Slice block);
 
 	Error nilFreeAll(Allocator alloc);
 
-	void asAllocatorVoid(Allocator *dst, void *alloc, AllocatorVTbl *vtbl);
+	void asAllocatorVoid(Allocator *dst, rawptr alloc, AllocatorVTbl *vtbl);
 }

@@ -1,12 +1,12 @@
 module;
 
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 
 export module core.memory.fixedAllocator;
 export import core.memory.allocator;
 export import core.memory.slice;
+export import core.stdtypes;
 
 export namespace draco::memory
 {
@@ -15,13 +15,13 @@ export namespace draco::memory
 		struct FixedAllocator
 		{
 			uint8_t *buffer;
-			size_t size;
+			usize size;
 			bool allocated;
 		};
 
 		void init(FixedAllocator *alloc, Slice block);
 
-		Error alloc(Allocator alloc, Slice *dst, size_t size, size_t align);
+		Error alloc(Allocator alloc, Slice *dst, usize size, usize align);
 
 		Error freeAll(Allocator alloc);
 

@@ -1,16 +1,15 @@
 module;
 
-#include <cstddef>
-
 export module core.memory.pageAllocator;
 export import core.memory.allocator;
 export import core.memory.slice;
+export import core.stdtypes;
 
 export namespace draco::memory
 {
 	namespace page
 	{
-		Error alloc(Allocator alloc, Slice *dst, size_t size, size_t align);
+		Error alloc(Allocator alloc, Slice *dst, usize size, usize align);
 
 		Error free(Allocator alloc, Slice block);
 

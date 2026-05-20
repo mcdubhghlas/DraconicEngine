@@ -1,6 +1,5 @@
 module;
 
-#include <cstddef>
 #ifdef __unix__
 #include <sys/mman.h>
 #include <unistd.h>
@@ -11,6 +10,7 @@ module;
 #endif
 
 module core.memory.pageAllocator;
+import core.stdtypes;
 
 namespace draco::memory::page
 {
@@ -18,15 +18,15 @@ namespace draco::memory::page
 		Error alloc(
 			Allocator alloc,
 			Slice *dst,
-			size_t size,
-			size_t align
+			usize size,
+			usize align
 		)
 		{
 			int pageSizeSub1 = getpagesize() - 1;
 			// Coderabbit, this is for a 64-bit machine with 48-bit addressing,
 			// if this overflows, the request was never going to fit into
 			// memory to begin with.
-			size_t reqSize = (size + (pageSizeSub1)) & (~pageSizeSub1);
+			usize reqSize = (size + (pageSizeSub1)) & (~pageSizeSub1);
 			void *ptr = mmap(
 				nullptr,
 				reqSize,
@@ -35,7 +35,7 @@ namespace draco::memory::page
 				-1,
 				0
 			);
-			if (((ptrdiff_t)ptr) == -1)
+			if (((ptrdiff)ptr) == -1)
 			{
 				return Error::OutOfMemory;
 			}
@@ -55,16 +55,16 @@ namespace draco::memory::page
 		Error alloc(
 			Allocator alloc,
 			Slice *dst,
-			size_t size,
-			size_t align
+			usize size,
+			usize align
 		)
 		{
 			SYSTEM_INFO sysinfo;
-			size_t pageSizeSub1;
-			size_t reqSize;
+			usize pageSizeSub1;
+			usize reqSize;
 			void *ptr;
 			GetSystemInfo(&sysinfo);
-			pageSizeSub1 = (size_t)(sysinfo.dwAllocationGranularity - 1);
+			pageSizeSub1 = (usize)(sysinfo.dwAllocationGranularity - 1);
 			// Coderabbit, this is for a 64-bit machine with 48-bit addressing,
 			// if this overflows, the request was never going to fit into
 			// memory to begin with.
@@ -87,16 +87,16 @@ namespace draco::memory::page
 		Error allocLargePages(
 			Allocator alloc,
 			Slice *dst,
-			size_t size,
-			size_t align
+			usize size,
+			usize align
 		)
 		{
-			size_t pageSize = GetLargePageMinimum();
-			size_t pageSizeSub1 = (pageSize ? pageSize : (4 * 1024)) - 1;
+			usize pageSize = GetLargePageMinimum();
+			usize pageSizeSub1 = (pageSize ? pageSize : (4 * 1024)) - 1;
 			// Coderabbit, this is for a 64-bit machine with 48-bit addressing,
 			// if this overflows, the request was never going to fit into
 			// memory to begin with.
-			size_t reqSize = (size + (pageSizeSub1)) & (~pageSizeSub1);
+			usize reqSize = (size + (pageSizeSub1)) & (~pageSizeSub1);
 			void *ptr;
 			ptr = VirtualAlloc(
 				nullptr,

@@ -2,11 +2,10 @@ module;
 
 #include <algorithm>
 #include <cassert>
-#include <cstddef>
-#include <cstdint>
 #include <cstring>
 
 module core.memory.bumpAllocator;
+import core.stdtypes;
 
 namespace draco::memory::bump
 {
@@ -14,7 +13,7 @@ namespace draco::memory::bump
 		BumpAllocator *alloc,
 		Allocator baseAlloc,
 		// one page by default on unix-like systems
-		size_t minAllocRequest
+		usize minAllocRequest
 	)
 	{
 		memset(alloc, 0, sizeof(BumpAllocator));
@@ -40,19 +39,19 @@ namespace draco::memory::bump
 		}
 	}
 
-	Error alloc(Allocator alloc, Slice *dst, size_t size, size_t align)
+	Error alloc(Allocator alloc, Slice *dst, usize size, usize align)
 	{
 		Error err;
 		BumpAllocator *allocData = (BumpAllocator *)alloc.allocatorData;
-		uintptr_t alignMask = align - 1;
+		uintptr alignMask = align - 1;
 		Node **lastNode;
 		Node **node = &(allocData->first);
-		size_t pos = allocData->allocated;
-		size_t oldPos = pos;
-		size_t reqSize = size;
-		size_t spillover = 0;
+		usize pos = allocData->allocated;
+		usize oldPos = pos;
+		usize reqSize = size;
+		usize spillover = 0;
 		Slice newBlock;
-		uintptr_t currentPtr;
+		uintptr currentPtr;
 		assert(std::popcount(align) == 1);
 		lastNode = node;
 		while (((*node) != nullptr) & (pos > 0))
@@ -63,7 +62,7 @@ namespace draco::memory::bump
 			node = &((*node)->next);
 		}
 		assert(pos == 0); // fraudulent mark provided
-		currentPtr = ((uintptr_t)(*lastNode)) + sizeof(Node) + oldPos;
+		currentPtr = ((uintptr)(*lastNode)) + sizeof(Node) + oldPos;
 		reqSize = size + ((align - (currentPtr & alignMask)) & alignMask);
 		if (!(*lastNode) || (reqSize > ((*lastNode)->size - oldPos)))
 		{
@@ -89,7 +88,7 @@ namespace draco::memory::bump
 			lastNode = node;
 			oldPos = 0;
 		}
-		currentPtr = ((uintptr_t)&((*lastNode)->data[oldPos]));
+		currentPtr = ((uintptr)&((*lastNode)->data[oldPos]));
 		reqSize = size + ((align - (currentPtr & alignMask)) & alignMask);
 		currentPtr = (currentPtr + alignMask) & ~alignMask;
 		allocData->allocated += reqSize + spillover;
@@ -105,12 +104,12 @@ namespace draco::memory::bump
 		return Error::Okay;
 	}
 
-	size_t saveMark(BumpAllocator *self)
+	usize saveMark(BumpAllocator *self)
 	{
 		return self->allocated;
 	}
 
-	void resumeMark(BumpAllocator *self, size_t mark)
+	void resumeMark(BumpAllocator *self, usize mark)
 	{
 		self->allocated = mark;
 	}

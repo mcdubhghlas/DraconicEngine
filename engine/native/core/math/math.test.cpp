@@ -31,10 +31,12 @@
 
 import core.math;
 
+using namespace draco;
+
 TEST_SUITE("math") {
     TEST_CASE("pow") {
-        float result = draco::math::pow(2.0f, 0.5f);
-        constexpr float expected = draco::math::SQRT2;
+        f32 result = draco::math::pow(2.0f, 0.5f);
+        constexpr f32 expected = draco::math::SQRT2;
         CHECK_EQ(result, expected);
     }
 
@@ -308,8 +310,8 @@ TEST_SUITE("vector2") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector2 result_smaller = min_length(a, smaller_length);
             const Vector2 result_swapped = min_length(smaller_length, a);
@@ -357,8 +359,8 @@ TEST_SUITE("vector2") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector2 result_smaller = max_length(a, smaller_length);
             const Vector2 result_swapped = max_length(larger_length, a);
@@ -763,8 +765,8 @@ TEST_SUITE("vector3") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector3 result_smaller = min_length(a, smaller_length);
             const Vector3 result_swapped = min_length(smaller_length, a);
@@ -812,8 +814,8 @@ TEST_SUITE("vector3") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector3 result_smaller = max_length(a, smaller_length);
             const Vector3 result_swapped = max_length(larger_length, a);
@@ -1254,8 +1256,8 @@ TEST_SUITE("vector4") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector4 result_smaller = min_length(a, smaller_length);
             const Vector4 result_swapped = min_length(smaller_length, a);
@@ -1303,8 +1305,8 @@ TEST_SUITE("vector4") {
         );
 
         SUBCASE("float") {
-            static constexpr float smaller_length = 1.0f;
-            static constexpr float larger_length = 10.0f;
+            static constexpr f32 smaller_length = 1.0f;
+            static constexpr f32 larger_length = 10.0f;
 
             const Vector4 result_smaller = max_length(a, smaller_length);
             const Vector4 result_swapped = max_length(larger_length, a);

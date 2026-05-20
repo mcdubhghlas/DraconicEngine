@@ -8,6 +8,7 @@ module;
 export module core.math.functions;
 import core.math.constants;
 import core.defs;
+import core.stdtypes;
 
 export namespace draco::math {
     template <arithmetic T>
@@ -32,7 +33,7 @@ export namespace draco::math {
     template <arithmetic T>
     constexpr T abs(T value) noexcept {
         // Manually compute abs for signed types.
-        // Also avoids potential int8_t -> int issues.
+        // Also avoids potential i8 -> i32 issues.
         if constexpr (std::floating_point<T>) {
             return value < T{0} ? -value : value;
         } else if constexpr (std::signed_integral<T>) {
@@ -65,27 +66,27 @@ export namespace draco::math {
         }
 	}
 
-	constexpr float floor(float value) noexcept {
+	constexpr f32 floor(f32 value) noexcept {
 		if (value != value || abs(value) >= DECIMAL_LIMIT_F) {
 			return value;
 		}
-		const float truncated = static_cast<int>(value);
+		const f32 truncated = static_cast<i32>(value);
 		return truncated - (value < truncated);
 	}
 
-	constexpr float ceil(float value) noexcept {
+	constexpr f32 ceil(f32 value) noexcept {
 		return -floor(-value);
 	}
 
-	constexpr float trunc(float value) noexcept {
+	constexpr f32 trunc(f32 value) noexcept {
 		if (value != value || abs(value) >= DECIMAL_LIMIT_F) {
 			return value;
 		}
-		return static_cast<int>(value);
+		return static_cast<i32>(value);
 	}
 
-	constexpr float round(float value) noexcept {
-		const float s = sign(value);
+	constexpr f32 round(f32 value) noexcept {
+		const f32 s = sign(value);
 		return s * floor(s * value + 0.5f);
 	}
 

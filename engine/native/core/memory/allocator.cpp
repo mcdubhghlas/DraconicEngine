@@ -1,16 +1,15 @@
 module;
 
-#include <cstddef>
-
 module core.memory.allocator;
+import core.stdtypes;
 
 namespace draco::memory
 {
 	Error nilAlloc(
 		Allocator alloc,
 		Slice *dst,
-		size_t size,
-		size_t align
+		usize size,
+		usize align
 	)
 	{
 		return Error::NotImplemented;
@@ -26,7 +25,7 @@ namespace draco::memory
 		return Error::NotImplemented;
 	}
 
-	void asAllocatorVoid(Allocator *dst, void *alloc, AllocatorVTbl *vtbl)
+	void asAllocatorVoid(Allocator *dst, rawptr alloc, AllocatorVTbl *vtbl)
 	{
 		dst->allocatorData = (void*)alloc;
 		dst->vtbl = vtbl;

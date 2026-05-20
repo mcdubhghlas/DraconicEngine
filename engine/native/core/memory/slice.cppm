@@ -1,14 +1,13 @@
 module;
 
-#include <cstddef>
-
 export module core.memory.slice;
+export import core.stdtypes;
 
 export namespace draco::memory
 {
 	struct Slice
 	{
-		void *data;
-		size_t size;
+		rawptr data;
+		usize size;
 	};
 }
