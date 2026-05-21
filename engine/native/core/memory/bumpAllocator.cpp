@@ -1,6 +1,7 @@
 module;
 
 #include <algorithm>
+#include <bit>
 #include <cassert>
 #include <cstring>
 #include <source_location>
