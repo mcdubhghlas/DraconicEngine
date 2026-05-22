@@ -1,7 +1,5 @@
 name: 🐧 Linux Builds
 
-description: Build Draconic Engine on Linux using Clang 20 and CMake with Ninja
-
 on:
   push:
     branches:

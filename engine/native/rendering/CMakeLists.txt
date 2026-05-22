@@ -5,52 +5,9 @@ add_modules_library(mesh)
 add_modules_library(material)
 add_modules_library(quad_renderer)
 
-target_link_libraries(rhi
-    PUBLIC
-        core
-        math
-        memory
-        platform
-        bgfx
-        bx
-)
-
-target_link_libraries(rendergraph
-    PUBLIC
-        rhi
-        bx
-)
-
-target_link_libraries(mesh
-    PUBLIC
-    memory
-    rhi
-    math
-    core
-)
-
-target_link_libraries(material
-    PUBLIC
-    rhi
-)
-
-target_link_libraries(quad_renderer
-    PUBLIC
-        rhi
-        rendergraph
-        bgfx
-        bx
-)
-
-target_link_libraries(renderer
-    PUBLIC
-        core
-        rhi
-        rendergraph
-        mesh
-        quad_renderer
-        scene
-        transform
-        bgfx
-        bx
-)
+target_link_libraries(rhi PUBLIC core math memory platform bgfx bx)
+target_link_libraries(rendergraph PUBLIC rhi bx)
+target_link_libraries(mesh PUBLIC memory rhi math core)
+target_link_libraries(material PUBLIC rhi)
+target_link_libraries(quad_renderer PUBLIC rhi rendergraph bgfx bx)
+target_link_libraries(renderer PUBLIC core rhi rendergraph mesh quad_renderer scene transform bgfx bx)

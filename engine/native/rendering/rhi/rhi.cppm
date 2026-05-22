@@ -3,8 +3,12 @@ module;
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <print>
+#include <cstdlib>
 
 #include <bgfx/bgfx.h>
+
+#include "macros.h"
 
 export module rendering.rhi;
 
@@ -266,5 +270,45 @@ export namespace draco::rendering::rhi
 
     constexpr PipelineState operator&(PipelineState a, PipelineState b) {
         return static_cast<PipelineState>(static_cast<u64>(a) & static_cast<u64>(b));
+    }
+}
+
+// These are the things that we don't export but are visible to all implementation files
+namespace draco::rendering::rhi
+{
+    using namespace draco::core::memory;
+
+    extern HandleRegistry<Buffer, BufferTag> g_buffers;
+    extern HandleRegistry<Pipeline, PipelineTag> g_pipelines;
+    extern HandleRegistry<bgfx::UniformHandle, UniformTag> g_uniforms;
+    extern HandleRegistry<bgfx::TextureHandle, TextureTag> g_textures;
+    extern HandleRegistry<FramebufferResource, FramebufferTag> g_framebuffers;
+    extern HandleRegistry<bgfx::ShaderHandle, ShaderTag> g_shaders;
+    extern HandleRegistry<VertexLayoutResource, LayoutTag> g_layouts;
+
+    // Deferred destruction queue (GPU-safe deletion)
+    extern std::vector<DeletionReq> g_deletion_queue;
+    
+    extern u16 g_width;
+    extern u16 g_height;
+
+    // Explicit overloads
+    void destroy_later(bgfx::ShaderHandle handle);
+    void destroy_later(bgfx::TextureHandle handle);
+    void destroy_later(bgfx::FrameBufferHandle handle);
+    void destroy_later(bgfx::UniformHandle handle);
+    
+    // Ensures a handle is valid before use
+    // TODO: Replace with something better
+    template<typename Registry, typename HandleT>
+    auto* get_checked(Registry& reg, HandleT h, const char* name)
+    {
+        if (!reg.valid(h))
+        {
+            RHI_WARN(false, "{} handle invalid or stale!", name);
+            return (decltype(reg.get(h)))nullptr;
+        }
+
+        return reg.get(h);
     }
 }
