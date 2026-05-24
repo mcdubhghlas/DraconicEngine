@@ -11,7 +11,7 @@ TEST_CASE("Tracking allocator basic functions")
 	bump::BumpAllocator bumpAlloc;
 	tracking::TrackingAllocator trackingAlloc;
 	tracking::Analytics analytics;
-	tracking::AllocationDetails details[2];
+	tracking::AllocationDetails details[3];
 	Allocator alloc;
 	Slice aSlice;
 	Slice bSlice;
@@ -30,12 +30,13 @@ TEST_CASE("Tracking allocator basic functions")
 
 	REQUIRE(tracking::getActiveAllocations(trackingAlloc, 0, nullptr) == 3);
 	alloc.free(bSlice);
-	REQUIRE(tracking::getActiveAllocations(trackingAlloc, 2, details) == 2);
-	REQUIRE(details[1].data.data == aSlice.data);
+	REQUIRE(tracking::getActiveAllocations(trackingAlloc, 3, details) == 3);
+	REQUIRE(details[2].data.data == aSlice.data);
+	REQUIRE(details[1].data.data == bSlice.data); // with a freeing allocator this line shouldn't exist
 	REQUIRE(details[0].data.data == cSlice.data);
 	tracking::getAnalytics(trackingAlloc, &analytics);
 	REQUIRE(analytics.totalAllocatedBytes >= 9);
-	REQUIRE(analytics.activeAllocationsCount == 2);
+	REQUIRE(analytics.activeAllocationsCount == 3);
 	alloc.freeAll();
 	tracking::getAnalytics(trackingAlloc, &analytics);
 	REQUIRE(analytics.activeAllocationsCount == 0);
