@@ -3,7 +3,6 @@ module;
 #include <type_traits>
 
 export module core.defs;
-export import core.version;
 export import core.stdtypes;
 
 static_assert(__cplusplus >=  202207L, "Minimum of C++23 required. Consider upgrading your compiler.");

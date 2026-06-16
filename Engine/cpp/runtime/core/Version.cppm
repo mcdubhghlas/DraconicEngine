@@ -8,9 +8,9 @@ import core.stdtypes;
 export namespace draco {
 
 struct Version {
-  u16 major;
-  u16 minor;
-  u16 patch;
+  u16 major = 0;
+  u16 minor = 0;
+  u16 patch = 0;
 };
 
 constexpr Version VERSION{.major = 2026, .minor = 0, .patch = 0};
