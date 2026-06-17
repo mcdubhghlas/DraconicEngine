@@ -1,6 +1,5 @@
 module;
 
-#include <cstdint>
 #include <SDL3/SDL.h>
 
 export module input;
@@ -20,19 +19,19 @@ export namespace draco::input
     };
 
     // Note: This isn't the same as RHI
-    void begin_frame();
-    void end_frame();
+    void beginFrame();
+    void endFrame();
 
-    void set_key(Key key, bool down);
-    bool is_down(Key key);
+    void setKey(Key key, bool down);
+    bool isDown(Key key);
 
-    void process_event(const SDL_Event& e);
+    void processEvent(const SDL_Event& e);
 
-    void set_mouse_captured(SDL_Window* window, bool enabled);
-    bool is_mouse_captured();
+    void setMouseCaptured(SDL_Window* window, bool enabled);
+    bool isMouseCaptured();
     
-    void set_mouse_delta(f32 dx, f32 dy);
+    void setMouseDelta(f32 dx, f32 dy);
 
-    f32 get_mouse_dx();
-    f32 get_mouse_dy();
+    f32 getMouseDx();
+    f32 getMouseDy();
 }

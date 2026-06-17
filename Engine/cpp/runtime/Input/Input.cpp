@@ -30,47 +30,47 @@ namespace draco::input
         }
     }
 
-    void begin_frame()
+    void beginFrame()
     {
         g_mouse_dx = 0;
         g_mouse_dy = 0;
     }
 
-    void end_frame()
+    void endFrame()
     {
     }
 
-    void set_key(Key key, bool down)
+    void setKey(Key key, bool down)
     {
         if (key == Key::Invalid) return;
 
         g_keys[(u16)key] = down;
     }
 
-    bool is_down(Key key)
+    bool isDown(Key key)
     {
         return g_keys[(u16)key];
     }
 
-    void process_event(const SDL_Event& e)
+    void processEvent(const SDL_Event& e)
     {
         switch (e.type)
         {
             case SDL_EVENT_KEY_DOWN:
-                set_key(map_sdl_key(e.key.key), true);
+                setKey(map_sdl_key(e.key.key), true);
                 break;
 
             case SDL_EVENT_KEY_UP:
-                set_key(map_sdl_key(e.key.key), false);
+                setKey(map_sdl_key(e.key.key), false);
                 break;
 
             case SDL_EVENT_MOUSE_MOTION:
-                set_mouse_delta((f32)e.motion.xrel, (f32)e.motion.yrel);
+                setMouseDelta((f32)e.motion.xrel, (f32)e.motion.yrel);
                 break;
         }
     }
 
-    void set_mouse_captured(SDL_Window* window, bool enabled)
+    void setMouseCaptured(SDL_Window* window, bool enabled)
     {
         g_mouse_captured = enabled;
 
@@ -78,22 +78,22 @@ namespace draco::input
         SDL_SetWindowMouseGrab(window, enabled);
     }
 
-    bool is_mouse_captured()
+    bool isMouseCaptured()
     {
         return g_mouse_captured;
     }
 
-    void set_mouse_delta(f32 dx, f32 dy)
+    void setMouseDelta(f32 dx, f32 dy)
     {
         g_mouse_dx += dx;
         g_mouse_dy += dy;
     }
 
-    f32 get_mouse_dx() { 
+    f32 getMouseDx() {
         return g_mouse_dx; 
     }
 
-    f32 get_mouse_dy() { 
+    f32 getMouseDy() {
         return g_mouse_dy; 
     }
 }
