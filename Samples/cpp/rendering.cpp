@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
         draco::rendering::renderer::resize((draco::u16)w, (draco::u16)h);
 
         camera.update(dt);
-        auto cam = camera.get_camera();
+        auto cam = camera.getCamera();
 
         draco::rendering::renderer::beginFrame(cam);
         
