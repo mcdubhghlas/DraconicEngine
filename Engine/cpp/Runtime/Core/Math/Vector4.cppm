@@ -2,6 +2,7 @@ module;
 
 #include <cmath>
 #include <format>
+#include "Runtime/Platform/intrinsics.h"
 
 export module core.math.types:vector4;
 export import :common;
