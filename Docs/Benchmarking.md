@@ -45,7 +45,7 @@ ankerl::nanobench::Bench b;
 // More samples, higher confidence.
 // If err% is too high, increase the value.
 // NOTE: It will increase the time cost.
-b.eopchs(21); // default: 11
+b.epochs(21); // default: 11
 
 // Longer epochs provide steadier output.
 // Edit this for fast operations (i.e. dot)
