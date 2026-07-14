@@ -3,7 +3,8 @@
 #
 add_executable(RenderSample RenderSample.cpp)
 
-# The SDL3 desktop shell backend owns windowing + input; it pulls in SDL3 (PUBLIC).
+# Everything the sample needs comes through Runtime (which links the single Shell
+# library, whose SDL3 dependency propagates for the createShell() backend).
 target_link_libraries(RenderSample
         PRIVATE
         Runtime
@@ -12,8 +13,10 @@ target_link_libraries(RenderSample
         bimg
 )
 
-# SDL is statically linked via Shell_Desktop; force-load the whole archive so its
-# constructor-registered video/input drivers are not stripped by the linker.
+# SDL is pulled in (statically) through the Shell library; force-load the whole archive
+# at the executable so SDL's constructor-registered video/input drivers are not stripped
+# by the linker. This stays on the final binary rather than on Shell, so it does not also
+# force a full SDL copy into the intermediate Runtime shared library.
 if(UNIX AND NOT APPLE)
     target_link_libraries(RenderSample PRIVATE Threads::Threads dl)
     target_link_options(RenderSample PRIVATE -Wl,--whole-archive $<TARGET_FILE:SDL3::SDL3-static> -Wl,--no-whole-archive)
